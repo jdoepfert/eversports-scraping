@@ -178,7 +178,7 @@
         "court_ids": [
           77395
         ],
-        "is_new": true
+        "is_new": false
       },
       {
         "time": "14:00",
@@ -309,7 +309,7 @@
         "is_new": false
       }
     ],
-    "new_count": 1,
+    "new_count": 0,
     "free_slots_map": {
       "13:15": [
         77395
