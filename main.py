@@ -256,8 +256,12 @@ def save_report(results: List[Dict]):
     """Saves the availability report to a JSON file."""
     ensure_data_dir()
     try:
+        data = {
+            "last_updated": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "days": results
+        }
         with open(REPORT_FILE, 'w') as f:
-            json.dump(results, f, indent=2)
+            json.dump(data, f, indent=2)
         logger.info(f"Saved report to {REPORT_FILE}")
     except IOError as e:
         logger.error(f"Failed to save report: {e}")

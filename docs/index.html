@@ -181,9 +181,10 @@
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
 
-                const results = await response.json();
+                const data = await response.json();
+                const results = data.days;
 
-                updatedDiv.textContent = 'Last updated: ' + new Date().toLocaleString();
+                updatedDiv.textContent = 'Last updated: ' + data.last_updated;
                 contentDiv.innerHTML = '';
 
                 if (results.length === 0) {

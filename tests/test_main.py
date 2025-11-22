@@ -152,4 +152,22 @@ def test_save_report():
         main.save_report(results)
         
         handle = mock_file()
-        assert handle.write.called
+        # Get the arguments passed to write
+        # json.dump writes in chunks, so we might need to capture all writes or just check call args
+        # Easier to mock json.dump
+        pass
+
+@patch('main.json.dump')
+def test_save_report_structure(mock_dump):
+    with patch('main.ensure_data_dir'), \
+         patch('builtins.open', mock_open()):
+        
+        results = [{"date": "2025-01-01"}]
+        main.save_report(results)
+        
+        # Check what was passed to json.dump
+        args, _ = mock_dump.call_args
+        data = args[0]
+        assert "last_updated" in data
+        assert "days" in data
+        assert data["days"] == results
