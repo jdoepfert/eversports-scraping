@@ -1,4 +1,7 @@
-.PHONY: install run serve clean
+.PHONY: install run serve clean test
+
+test:
+	pytest tests/
 
 install:
 	pip install -r requirements.txt
