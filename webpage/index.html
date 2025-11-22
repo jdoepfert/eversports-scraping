@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Badminton Court Availability</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f9;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        .updated {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 0.9em;
+        }
+
+        .loading {
+            text-align: center;
+            color: #666;
+            padding: 20px;
+        }
+
+        .error {
+            text-align: center;
+            color: #d32f2f;
+            padding: 20px;
+        }
+
+        .day-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .day-header {
+            padding: 15px 20px;
+            background-color: #e0e0e0;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background-color 0.2s;
+        }
+
+        .day-header:hover {
+            background-color: #d0d0d0;
+        }
+
+        .day-header.has-new {
+            background-color: #ffcccc;
+            border-left: 5px solid #d32f2f;
+        }
+
+        .day-header.has-new:hover {
+            background-color: #ffb3b3;
+        }
+
+        .day-header h2 {
+            margin: 0;
+            font-size: 1.2em;
+        }
+
+        .badge {
+            background: #333;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+        }
+
+        .badge.new {
+            background: #d32f2f;
+        }
+
+        .slots {
+            display: none;
+            padding: 15px 20px;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        .slots.open {
+            display: block;
+        }
+
+        .slot {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .slot:last-child {
+            border-bottom: none;
+        }
+
+        .slot.new {
+            color: #d32f2f;
+            font-weight: bold;
+        }
+
+        .slot-time {
+            width: 80px;
+        }
+
+        .slot-courts {
+            flex: 1;
+            text-align: right;
+        }
+
+        .booking-btn {
+            display: block;
+            width: 100%;
+            text-align: center;
+            background-color: #ff8c00;
+            /* Eversports orange-ish */
+            color: white;
+            padding: 10px 0;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+
+        .booking-btn:hover {
+            background-color: #e67e00;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <h1>🏸 Badminton Availability</h1>
+    <div id="updated" class="updated"></div>
+    <div id="content">
+        <div class="loading">Loading availability data...</div>
+    </div>
+
+    <script>
+        async function loadData() {
+            const contentDiv = document.getElementById('content');
+            const updatedDiv = document.getElementById('updated');
+
+            try {
+                // Fetch the report.json from the data directory
+                // Assuming webpage/index.html is served, data/report.json is at ../data/report.json
+                // But on GitHub Pages, if served from root, it might be just data/report.json
+                // Let's try a relative path that works if index.html is in webpage/ and data is in data/
+                // If we deploy from root, the structure is:
+                // /webpage/index.html
+                // /data/report.json
+                // So fetching '../data/report.json' should work.
+                const response = await fetch('../data/report.json');
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const results = await response.json();
+
+                updatedDiv.textContent = 'Last updated: ' + new Date().toLocaleString();
+                contentDiv.innerHTML = '';
+
+                if (results.length === 0) {
+                    contentDiv.innerHTML = '<div class="loading">No availability data found.</div>';
+                    return;
+                }
+
+                results.forEach((day, index) => {
+                    if (day.slots.length === 0) return;
+
+                    const dayCard = document.createElement('div');
+                    dayCard.className = 'day-card';
+
+                    const hasNew = day.new_count > 0;
+                    const headerClass = hasNew ? 'day-header has-new' : 'day-header';
+                    const badgeClass = hasNew ? 'badge new' : 'badge';
+                    const badgeText = hasNew ? `${day.new_count} NEW` : `${day.slots.length} Available`;
+
+                    const slotsHtml = day.slots.map(slot => {
+                        const slotClass = slot.is_new ? 'slot new' : 'slot';
+                        return `
+                            <div class="${slotClass}">
+                                <span class="slot-time">${slot.time}</span>
+                                <span class="slot-courts">${slot.courts.join(', ')}</span>
+                            </div>
+                        `;
+                    }).join('');
+
+                    dayCard.innerHTML = `
+                        <div class="${headerClass}" onclick="toggleSlots('day-${index}')">
+                            <h2>${day.date}</h2>
+                            <span class="${badgeClass}">${badgeText}</span>
+                        </div>
+                        <div id="day-${index}" class="slots">
+                            <a href="https://www.eversports.de/widget/w/c7o9ft" target="_blank" class="booking-btn">Go to booking page</a>
+                            ${slotsHtml}
+                        </div>
+                    `;
+
+                    contentDiv.appendChild(dayCard);
+                });
+
+            } catch (error) {
+                console.error('Error loading data:', error);
+                contentDiv.innerHTML = `<div class="error">Failed to load data. Please try again later.<br><small>${error.message}</small></div>`;
+            }
+        }
+
+        function toggleSlots(id) {
+            const el = document.getElementById(id);
+            el.classList.toggle('open');
+        }
+
+        // Load data when page loads
+        loadData();
+    </script>
+</body>
+
+</html>
