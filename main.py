@@ -11,7 +11,7 @@ import cloudscraper
 
 
 # --- Configuration ---
-DATA_DIR = "data"
+DATA_DIR = "docs/data"
 HISTORY_FILE = os.path.join(DATA_DIR, "availability.json")
 
 FACILITY_ID = 76443

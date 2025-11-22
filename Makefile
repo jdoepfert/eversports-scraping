@@ -11,10 +11,10 @@ serve:
 
 clean:
 	rm -rf __pycache__
-	rm -rf data/*.json
+	rm -rf docs/data/*.json
 
 deploy:
-	git add data/availability.json data/report.json webpage/index.html
+	git add docs/data/availability.json docs/data/report.json docs/index.html
 	@if ! git diff --quiet || ! git diff --staged --quiet; then \
 		git commit -m "[BOT] Update availability"; \
 		git push; \

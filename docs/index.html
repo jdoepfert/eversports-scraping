@@ -175,7 +175,7 @@
                 // /webpage/index.html
                 // /data/report.json
                 // So fetching '../data/report.json' should work.
-                const response = await fetch('../data/report.json');
+                const response = await fetch('./data/report.json');
 
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
