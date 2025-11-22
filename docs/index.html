@@ -182,9 +182,14 @@
                 }
 
                 const data = await response.json();
-                const results = data.days;
+                let results;
+                let lastUpdated;
 
-                updatedDiv.textContent = 'Last updated: ' + data.last_updated;
+                // New format (object with last_updated and days)
+                results = data.days;
+                lastUpdated = new Date(data.last_updated).toLocaleString();
+
+                updatedDiv.textContent = 'Last updated: ' + lastUpdated;
                 contentDiv.innerHTML = '';
 
                 if (results.length === 0) {

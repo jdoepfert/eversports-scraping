@@ -1,7 +1,7 @@
 import argparse
 import logging
 import sys
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from urllib.parse import urlencode
 import json
 import os
@@ -257,7 +257,7 @@ def save_report(results: List[Dict]):
     ensure_data_dir()
     try:
         data = {
-            "last_updated": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "last_updated": datetime.now(timezone.utc).isoformat(),
             "days": results
         }
         with open(REPORT_FILE, 'w') as f:

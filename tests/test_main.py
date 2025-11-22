@@ -169,5 +169,7 @@ def test_save_report_structure(mock_dump):
         args, _ = mock_dump.call_args
         data = args[0]
         assert "last_updated" in data
+        # Verify ISO format
+        datetime.fromisoformat(data["last_updated"])
         assert "days" in data
         assert data["days"] == results
