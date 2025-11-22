@@ -13,6 +13,7 @@ import cloudscraper
 # --- Configuration ---
 DATA_DIR = "docs/data"
 HISTORY_FILE = os.path.join(DATA_DIR, "availability.json")
+REPORT_FILE = os.path.join(DATA_DIR, "report.json")
 
 FACILITY_ID = 76443
 COURT_IDS = [77394, 77395, 77396]
@@ -249,8 +250,6 @@ def print_availability_report(day_data: Dict):
         print(f"Summary: Found {len(slots)} available time slots for {date_str}!")
     else:
         print(f"Summary: No courts available for {date_str}.")
-
-REPORT_FILE = os.path.join(DATA_DIR, "report.json")
 
 def save_report(results: List[Dict]):
     """Saves the availability report to a JSON file."""
