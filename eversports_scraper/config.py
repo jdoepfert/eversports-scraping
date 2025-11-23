@@ -9,10 +9,7 @@ HISTORY_FILE = os.path.join(DATA_DIR, "availability.json")
 REPORT_FILE = os.path.join(DATA_DIR, "report.json")
 
 # --- URLs & API ---
-TARGET_DATES_CSV_URL = os.environ.get(
-    "TARGET_DATES_CSV_URL",
-    "https://docs.google.com/spreadsheets/d/e/2PACX-1vT2NjrFvgP0Qr5IdPqZsBg0XXVnv3M8mK6Hy9QTSyo_r3IMPO-7fYyfbq-e0TyYFtcRI-JaAH1SmitB/pub?gid=0&single=true&output=csv",
-)
+TARGET_DATES_CSV_URL = os.environ.get("TARGET_DATES_CSV_URL")
 
 # --- Telegram ---
 TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
