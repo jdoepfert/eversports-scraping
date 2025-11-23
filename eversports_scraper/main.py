@@ -4,7 +4,7 @@ import io
 import logging
 import sys
 from datetime import datetime, timedelta
-from typing import Dict, List
+from typing import List
 
 import requests
 

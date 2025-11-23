@@ -5,6 +5,8 @@ from urllib.parse import urlencode
 
 import cloudscraper
 
+from eversports_scraper.models import DayAvailability, Slot
+
 # --- Configuration ---
 FACILITY_ID = 76443
 COURT_IDS = [77394, 77395, 77396]
@@ -120,11 +122,6 @@ def calculate_free_slots(booked_courts_by_slot: Dict[str, Set[int]], all_slots: 
             free_slots_map[slot] = free_ids
 
     return free_slots_map
-
-
-from eversports_scraper.models import DayAvailability, Slot
-
-# ... (imports)
 
 
 def get_day_availability(date_str: str, all_slots: List[str], history: Dict) -> Optional[DayAvailability]:
