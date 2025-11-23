@@ -1,8 +1,6 @@
-import pytest
 import sys
 import os
-from datetime import datetime
-from unittest.mock import MagicMock, patch, mock_open
+from unittest.mock import MagicMock, patch
 
 # Add parent directory to path to import main
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
