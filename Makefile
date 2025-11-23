@@ -1,3 +1,6 @@
+-include .env
+export
+
 .PHONY: install run serve clean test lint format type-check
 
 test:
