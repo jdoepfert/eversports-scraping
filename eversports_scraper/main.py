@@ -62,16 +62,16 @@ def parse_arguments():
     return parser.parse_args()
 
 
-def print_availability_report(day_data: Dict):
+def print_availability_report(day_data):
     """Prints the formatted availability report to stdout."""
-    date_str = day_data["date"]
-    slots = day_data["slots"]
+    date_str = day_data.date
+    slots = day_data.slots
 
     print(f"\n--- Availability Report for {date_str} ---")
 
     for slot in slots:
-        prefix = "[NEW]      " if slot["is_new"] else "[AVAILABLE]"
-        print(f"{prefix} {slot['time']}: {', '.join(slot['courts'])}")
+        prefix = "[NEW]      " if slot.is_new else "[AVAILABLE]"
+        print(f"{prefix} {slot.time}: {', '.join(slot.courts)}")
 
     if slots:
         print(f"Summary: Found {len(slots)} available time slots for {date_str}!")
@@ -140,16 +140,16 @@ def main():
 
         if day_data:
             print_availability_report(day_data)
-            total_new_slots += day_data["new_count"]
-            current_state[date_str] = day_data["free_slots_map"]
+            total_new_slots += day_data.new_count
+            current_state[date_str] = day_data.free_slots_map
             results.append(day_data)
 
             # Collect new slots for notification
-            new_slots = [s for s in day_data["slots"] if s["is_new"]]
+            new_slots = [s for s in day_data.slots if s.is_new]
             if new_slots:
                 msg_lines = [f"*{date_str}*:"]
                 for s in new_slots:
-                    msg_lines.append(f"  - {s['time']} ({', '.join(s['courts'])})")
+                    msg_lines.append(f"  - {s.time} ({', '.join(s.courts)})")
                 new_slots_messages.append("\n".join(msg_lines))
 
         elif date_str in history:

@@ -38,11 +38,13 @@ def save_history(history: Dict):
         logger.error(f"Failed to save history: {e}")
 
 
-def save_report(results: List[Dict]):
+def save_report(results: List):
     """Saves the availability report to a JSON file."""
     ensure_data_dir()
     try:
-        data = {"last_updated": datetime.now(timezone.utc).isoformat(), "days": results}
+        # Convert Pydantic models to dicts if necessary
+        serialized_results = [r.model_dump() if hasattr(r, "model_dump") else r for r in results]
+        data = {"last_updated": datetime.now(timezone.utc).isoformat(), "days": serialized_results}
         with open(config.REPORT_FILE, "w") as f:
             json.dump(data, f, indent=2)
         logger.info(f"Saved report to {config.REPORT_FILE}")

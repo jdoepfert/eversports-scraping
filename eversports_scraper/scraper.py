@@ -122,7 +122,11 @@ def calculate_free_slots(booked_courts_by_slot: Dict[str, Set[int]], all_slots: 
     return free_slots_map
 
 
-def get_day_availability(date_str: str, all_slots: List[str], history: Dict) -> Optional[Dict]:
+from eversports_scraper.models import DayAvailability, Slot
+
+# ... (imports)
+
+def get_day_availability(date_str: str, all_slots: List[str], history: Dict) -> Optional[DayAvailability]:
     """Fetches data and returns a structured availability object for a single date."""
     data = fetch_booked_slots(date_str)
 
@@ -152,11 +156,11 @@ def get_day_availability(date_str: str, all_slots: List[str], history: Dict) -> 
         if is_new:
             new_slots_count += 1
 
-        slots_data.append({"time": slot, "courts": free_court_names, "court_ids": free_court_ids, "is_new": is_new})
+        slots_data.append(Slot(time=slot, courts=free_court_names, court_ids=free_court_ids, is_new=is_new))
 
-    return {
-        "date": date_str,
-        "slots": slots_data,
-        "new_count": new_slots_count,
-        "free_slots_map": free_slots_map,  # For saving to history
-    }
+    return DayAvailability(
+        date=date_str,
+        slots=slots_data,
+        new_count=new_slots_count,
+        free_slots_map=free_slots_map,
+    )
