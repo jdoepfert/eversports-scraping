@@ -20,7 +20,7 @@ def setup_logging(verbose: bool):
     level = logging.DEBUG if verbose else logging.INFO
     logging.basicConfig(
         level=level,
-        format="%(asctime)s | %(levelname)-8s | %(lineno)4d | %(message)s",
+        format="%(asctime)s [%(levelname)s]: %(name)s:%(lineno)d | %(message)s",
         handlers=[logging.StreamHandler(sys.stderr)],
     )
 
