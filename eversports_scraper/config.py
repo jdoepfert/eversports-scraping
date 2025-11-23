@@ -1,4 +1,7 @@
 import os
+import logging
+
+logger = logging.getLogger(__name__)
 
 # --- File Paths ---
 DATA_DIR = "docs/data"
