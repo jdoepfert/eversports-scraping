@@ -1,4 +1,4 @@
-.PHONY: install run serve clean test lint format
+.PHONY: install run serve clean test lint format type-check
 
 test:
 	pytest tests/
@@ -8,6 +8,9 @@ lint:
 
 format:
 	ruff format .
+
+type-check:
+	mypy .
 
 install:
 	pip install .

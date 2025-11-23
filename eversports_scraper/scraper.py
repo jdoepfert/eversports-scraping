@@ -75,7 +75,8 @@ def fetch_booked_slots(date_str: str) -> Optional[Dict]:
         response = scraper.get(full_url, headers=COMMON_HEADERS, timeout=10)
         logger.debug(f"Response status: {response.status_code}")
         response.raise_for_status()
-        return response.json()
+        data: Dict = response.json()
+        return data
     except Exception as e:
         logger.error(f"Error fetching data: {e}")
         if "response" in locals() and response.status_code == 403:
@@ -90,7 +91,7 @@ def parse_booked_slots(data: Dict, date_str: str, all_slots: List[str]) -> Dict[
         logger.debug(f"Response data: {data}")
         return {}
 
-    booked_courts_by_slot = {slot: set() for slot in all_slots}
+    booked_courts_by_slot: Dict[str, Set[int]] = {slot: set() for slot in all_slots}
 
     for booking in data["slots"]:
         if booking.get("date") == date_str:

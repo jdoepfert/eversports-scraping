@@ -21,7 +21,8 @@ def load_history() -> Dict:
         return {}
     try:
         with open(config.HISTORY_FILE, "r") as f:
-            return json.load(f)
+            data: Dict = json.load(f)
+            return data
     except (json.JSONDecodeError, IOError):
         logger.warning("Failed to load history file. Starting fresh.")
         return {}
