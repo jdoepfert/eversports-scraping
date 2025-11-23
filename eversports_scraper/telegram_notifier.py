@@ -1,9 +1,11 @@
-import requests
 import logging
+
+import requests
 
 from eversports_scraper import config
 
 logger = logging.getLogger(__name__)
+
 
 def send_telegram_message(message: str):
     """Sends a message to the configured Telegram chat."""
@@ -15,11 +17,7 @@ def send_telegram_message(message: str):
         return
 
     url = f"https://api.telegram.org/bot{token}/sendMessage"
-    payload = {
-        "chat_id": chat_id,
-        "text": message,
-        "parse_mode": "Markdown"
-    }
+    payload = {"chat_id": chat_id, "text": message, "parse_mode": "Markdown"}
 
     try:
         response = requests.post(url, json=payload, timeout=10)

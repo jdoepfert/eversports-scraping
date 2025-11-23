@@ -1,7 +1,13 @@
-.PHONY: install run serve clean test
+.PHONY: install run serve clean test lint format
 
 test:
 	pytest tests/
+
+lint:
+	ruff check .
+
+format:
+	ruff format .
 
 install:
 	pip install -e .

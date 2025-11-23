@@ -2,3 +2,4 @@ requests
 cloudscraper
 pytest
 pytest-mock
+ruff
