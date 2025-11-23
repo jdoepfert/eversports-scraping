@@ -4,9 +4,6 @@ import os
 from datetime import datetime
 from unittest.mock import MagicMock, patch
 
-# Add parent directory to path to import eversports_scraper
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 from eversports_scraper import scraper
 
 @pytest.fixture

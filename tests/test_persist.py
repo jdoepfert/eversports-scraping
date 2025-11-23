@@ -3,9 +3,6 @@ import os
 from datetime import datetime
 from unittest.mock import patch, mock_open
 
-# Add parent directory to path to import persist
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 from eversports_scraper import persist
 from eversports_scraper import config
 

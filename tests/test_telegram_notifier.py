@@ -3,9 +3,6 @@ import os
 from unittest.mock import patch, MagicMock
 import requests
 
-# Add parent directory to path to import telegram_notifier
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 from eversports_scraper import telegram_notifier
 
 @patch('eversports_scraper.telegram_notifier.requests.post')

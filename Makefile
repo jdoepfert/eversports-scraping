@@ -4,6 +4,7 @@ test:
 	pytest tests/
 
 install:
+	pip install -e .
 	pip install -r requirements.txt
 
 run:
