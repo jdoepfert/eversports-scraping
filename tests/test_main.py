@@ -94,7 +94,7 @@ def test_main_flow_manual_override(
 
         main_module.main()
 
-        # Should fetch from CSV (new logic: always fetch first)
+        # Should fetch from CSV# No changes needed yet, let's verify first.)
         mock_fetch_dates.assert_called_once()
 
         # Should call scraper for the manual date (fallback)

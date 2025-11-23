@@ -79,12 +79,8 @@ def print_availability_report(day_data: Dict):
         print(f"Summary: No courts available for {date_str}.")
 
 
-def main():
-    args = parse_arguments()
-    setup_logging(args.verbose)
-
-    target_dates = []
-
+def get_target_dates_list(args) -> List[str]:
+    """Determines the list of target dates to scrape."""
     logger.info("Fetching target dates from CSV...")
     target_dates = fetch_target_dates(config.TARGET_DATES_CSV_URL)
 
@@ -107,13 +103,36 @@ def main():
         logger.error("No target dates found. Exiting.")
         sys.exit(1)
 
+    return target_dates
+
+
+def notify_if_needed(total_new_slots: int, new_slots_messages: List[str], num_days: int):
+    """Sends a Telegram notification if new slots were found."""
+    if total_new_slots > 0:
+        print(f"\n*** Total NEW slots found across {num_days} days: {total_new_slots} ***")
+
+        # Send Telegram notification
+        message = f"🏸 *New Badminton Slots Found!* ({total_new_slots})\n\n" + "\n\n".join(new_slots_messages)
+        message += "\n\n[Book Now](https://www.eversports.de/widget/w/c7o9ft)"
+        telegram_notifier.send_telegram_message(message)
+
+    else:
+        print(f"\nNo new slots found across {num_days} days.")
+
+
+def main():
+    args = parse_arguments()
+    setup_logging(args.verbose)
+
+    target_dates = get_target_dates_list(args)
     print(f"Checking availability for {len(target_dates)} days: {', '.join(target_dates)}")
 
     all_slots = scraper.get_all_slots()
     history = persist.load_history()
+
     current_state = {}
-    total_new_slots = 0
     results = []
+    total_new_slots = 0
     new_slots_messages = []
 
     for date_str in target_dates:
@@ -140,16 +159,7 @@ def main():
     persist.save_history(current_state)
     persist.save_report(results)
 
-    if total_new_slots > 0:
-        print(f"\n*** Total NEW slots found across {len(target_dates)} days: {total_new_slots} ***")
-
-        # Send Telegram notification
-        message = f"🏸 *New Badminton Slots Found!* ({total_new_slots})\n\n" + "\n\n".join(new_slots_messages)
-        message += "\n\n[Book Now](https://www.eversports.de/widget/w/c7o9ft)"
-        telegram_notifier.send_telegram_message(message)
-
-    else:
-        print(f"\nNo new slots found across {len(target_dates)} days.")
+    notify_if_needed(total_new_slots, new_slots_messages, len(target_dates))
 
 
 if __name__ == "__main__":
