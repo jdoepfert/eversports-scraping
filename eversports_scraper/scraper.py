@@ -126,6 +126,7 @@ from eversports_scraper.models import DayAvailability, Slot
 
 # ... (imports)
 
+
 def get_day_availability(date_str: str, all_slots: List[str], history: Dict) -> Optional[DayAvailability]:
     """Fetches data and returns a structured availability object for a single date."""
     data = fetch_booked_slots(date_str)
