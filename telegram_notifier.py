@@ -1,13 +1,13 @@
-import os
-import logging
 import requests
+import logging
+import config
 
 logger = logging.getLogger(__name__)
 
 def send_telegram_message(message: str):
     """Sends a message to the configured Telegram chat."""
-    token = os.environ.get("TELEGRAM_BOT_TOKEN")
-    chat_id = os.environ.get("TELEGRAM_CHAT_ID")
+    token = config.TELEGRAM_BOT_TOKEN
+    chat_id = config.TELEGRAM_CHAT_ID
 
     if not token or not chat_id:
         logger.warning("Telegram configuration missing. Skipping notification.")
@@ -24,5 +24,5 @@ def send_telegram_message(message: str):
         response = requests.post(url, json=payload, timeout=10)
         response.raise_for_status()
         logger.info("Telegram notification sent successfully.")
-    except requests.RequestException as e:
-        logger.error(f"Failed to send Telegram notification: {e}")
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Failed to send Telegram message: {e}")

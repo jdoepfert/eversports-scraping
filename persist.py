@@ -1,0 +1,48 @@
+import os
+import json
+import logging
+from datetime import datetime, timezone
+from typing import Dict, List
+
+import config
+
+logger = logging.getLogger(__name__)
+
+def ensure_data_dir():
+    """Ensures the data directory exists."""
+    if not os.path.exists(config.DATA_DIR):
+        os.makedirs(config.DATA_DIR)
+
+def load_history() -> Dict:
+    """Loads the previous availability state from a JSON file."""
+    if not os.path.exists(config.HISTORY_FILE):
+        return {}
+    try:
+        with open(config.HISTORY_FILE, 'r') as f:
+            return json.load(f)
+    except (json.JSONDecodeError, IOError):
+        logger.warning("Failed to load history file. Starting fresh.")
+        return {}
+
+def save_history(history: Dict):
+    """Saves the current availability state to a JSON file."""
+    ensure_data_dir()
+    try:
+        with open(config.HISTORY_FILE, 'w') as f:
+            json.dump(history, f, indent=2)
+    except IOError as e:
+        logger.error(f"Failed to save history: {e}")
+
+def save_report(results: List[Dict]):
+    """Saves the availability report to a JSON file."""
+    ensure_data_dir()
+    try:
+        data = {
+            "last_updated": datetime.now(timezone.utc).isoformat(),
+            "days": results
+        }
+        with open(config.REPORT_FILE, 'w') as f:
+            json.dump(data, f, indent=2)
+        logger.info(f"Saved report to {config.REPORT_FILE}")
+    except IOError as e:
+        logger.error(f"Failed to save report: {e}")

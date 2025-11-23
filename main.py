@@ -1,26 +1,16 @@
 import argparse
 import logging
 import sys
-from datetime import datetime, timedelta, timezone
-import json
-import os
+from datetime import datetime, timedelta
 from typing import List, Dict
-
-import scraper
-import telegram_notifier
-
-# --- Configuration ---
 import requests
 import csv
 import io
 
-# ... existing imports ...
-
-# --- Configuration ---
-DATA_DIR = "docs/data"
-HISTORY_FILE = os.path.join(DATA_DIR, "availability.json")
-REPORT_FILE = os.path.join(DATA_DIR, "report.json")
-TARGET_DATES_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT2NjrFvgP0Qr5IdPqZsBg0XXVnv3M8mK6Hy9QTSyo_r3IMPO-7fYyfbq-e0TyYFtcRI-JaAH1SmitB/pub?gid=0&single=true&output=csv"
+import scraper
+import telegram_notifier
+import config
+import persist
 
 # --- Logging Setup ---
 
@@ -34,8 +24,6 @@ def setup_logging(verbose: bool):
         format='%(asctime)s | %(levelname)-8s | %(lineno)4d | %(message)s',
         handlers=[logging.StreamHandler(sys.stderr)]
     )
-
-# --- Helper Functions ---
 
 def fetch_target_dates(url: str) -> List[str]:
     """Fetches target dates from a Google Sheet CSV."""
@@ -63,49 +51,6 @@ def fetch_target_dates(url: str) -> List[str]:
         logger.error(f"Failed to fetch target dates: {e}")
         return []
 
-# --- Persistence ---
-
-def ensure_data_dir():
-    """Ensures the data directory exists."""
-    if not os.path.exists(DATA_DIR):
-        os.makedirs(DATA_DIR)
-
-def load_history() -> Dict:
-    """Loads the previous availability state from a JSON file."""
-    if not os.path.exists(HISTORY_FILE):
-        return {}
-    try:
-        with open(HISTORY_FILE, 'r') as f:
-            return json.load(f)
-    except (json.JSONDecodeError, IOError):
-        logger.warning("Failed to load history file. Starting fresh.")
-        return {}
-
-def save_history(history: Dict):
-    """Saves the current availability state to a JSON file."""
-    ensure_data_dir()
-    try:
-        with open(HISTORY_FILE, 'w') as f:
-            json.dump(history, f, indent=2)
-    except IOError as e:
-        logger.error(f"Failed to save history: {e}")
-
-def save_report(results: List[Dict]):
-    """Saves the availability report to a JSON file."""
-    ensure_data_dir()
-    try:
-        data = {
-            "last_updated": datetime.now(timezone.utc).isoformat(),
-            "days": results
-        }
-        with open(REPORT_FILE, 'w') as f:
-            json.dump(data, f, indent=2)
-        logger.info(f"Saved report to {REPORT_FILE}")
-    except IOError as e:
-        logger.error(f"Failed to save report: {e}")
-
-# --- Main Execution ---
-
 def parse_arguments():
     """Parses command line arguments."""
     parser = argparse.ArgumentParser(description="Scrape Eversports for free badminton courts.")
@@ -118,7 +63,7 @@ def parse_arguments():
         "--days", 
         type=int, 
         default=3,
-        help="Number of days to check. Defaults to 1."
+        help="Number of days to check. Defaults to 3."
     )
     parser.add_argument(
         "-v", "--verbose", 
@@ -150,7 +95,7 @@ def main():
     target_dates = []
 
     logger.info("Fetching target dates from CSV...")
-    target_dates = fetch_target_dates(TARGET_DATES_CSV_URL)
+    target_dates = fetch_target_dates(config.TARGET_DATES_CSV_URL)
     
     if not target_dates:
         logger.warning("No target dates found in google sheet")
@@ -174,7 +119,7 @@ def main():
     print(f"Checking availability for {len(target_dates)} days: {', '.join(target_dates)}")
 
     all_slots = scraper.get_all_slots()
-    history = load_history()
+    history = persist.load_history()
     current_state = {}
     total_new_slots = 0
     results = []
@@ -201,8 +146,8 @@ def main():
              # Preserve history if fetch failed
              current_state[date_str] = history[date_str]
 
-    save_history(current_state)
-    save_report(results)
+    persist.save_history(current_state)
+    persist.save_report(results)
     
     if total_new_slots > 0:
         print(f"\n*** Total NEW slots found across {len(target_dates)} days: {total_new_slots} ***")

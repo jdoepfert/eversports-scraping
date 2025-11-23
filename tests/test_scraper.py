@@ -37,7 +37,7 @@ def test_build_url():
     date = "2025-01-01"
     url = scraper.build_url(date)
     assert scraper.API_BASE in url
-    assert f"startDate={date}" in url
+    assert "startDate=2025-01-01" in url
     assert "facilityId=76443" in url
     for cid in scraper.COURT_IDS:
         assert f"courts%5B%5D={cid}" in url
