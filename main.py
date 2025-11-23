@@ -7,10 +7,10 @@ import requests
 import csv
 import io
 
-import scraper
-import telegram_notifier
-import config
-import persist
+from eversports_scraper import scraper
+from eversports_scraper import telegram_notifier
+from eversports_scraper import config
+from eversports_scraper import persist
 
 # --- Logging Setup ---
 

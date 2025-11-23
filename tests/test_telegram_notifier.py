@@ -7,10 +7,10 @@ import requests
 # Add parent directory to path to import telegram_notifier
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import telegram_notifier
+from eversports_scraper import telegram_notifier
 
-@patch('telegram_notifier.requests.post')
-@patch('telegram_notifier.config')
+@patch('eversports_scraper.telegram_notifier.requests.post')
+@patch('eversports_scraper.telegram_notifier.config')
 def test_send_telegram_message_success(mock_config, mock_post):
     mock_config.TELEGRAM_BOT_TOKEN = "fake_token"
     mock_config.TELEGRAM_CHAT_ID = "fake_chat_id"
@@ -26,8 +26,8 @@ def test_send_telegram_message_success(mock_config, mock_post):
     assert kwargs['json']['text'] == "Test message"
     assert "fake_token" in args[0]
 
-@patch('telegram_notifier.requests.post')
-@patch('telegram_notifier.config')
+@patch('eversports_scraper.telegram_notifier.requests.post')
+@patch('eversports_scraper.telegram_notifier.config')
 def test_send_telegram_message_missing_config(mock_config, mock_post):
     mock_config.TELEGRAM_BOT_TOKEN = None
     mock_config.TELEGRAM_CHAT_ID = None
@@ -36,8 +36,8 @@ def test_send_telegram_message_missing_config(mock_config, mock_post):
     
     mock_post.assert_not_called()
 
-@patch('telegram_notifier.requests.post')
-@patch('telegram_notifier.config')
+@patch('eversports_scraper.telegram_notifier.requests.post')
+@patch('eversports_scraper.telegram_notifier.config')
 def test_send_telegram_message_failure(mock_config, mock_post):
     mock_config.TELEGRAM_BOT_TOKEN = "fake_token"
     mock_config.TELEGRAM_CHAT_ID = "fake_chat_id"

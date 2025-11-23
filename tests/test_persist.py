@@ -7,8 +7,8 @@ from unittest.mock import MagicMock, patch, mock_open
 # Add parent directory to path to import persist
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import persist
-import config
+from eversports_scraper import persist
+from eversports_scraper import config
 
 def test_ensure_data_dir():
     with patch('os.path.exists') as mock_exists, \
@@ -39,7 +39,7 @@ def test_load_history_no_file():
         assert history == {}
 
 def test_save_history():
-    with patch('persist.ensure_data_dir'), \
+    with patch('eversports_scraper.persist.ensure_data_dir'), \
          patch('builtins.open', mock_open()) as mock_file:
         
         history = {"test": "data"}
@@ -49,15 +49,15 @@ def test_save_history():
         assert handle.write.called
 
 def test_save_report():
-    with patch('persist.ensure_data_dir'), \
+    with patch('eversports_scraper.persist.ensure_data_dir'), \
          patch('builtins.open', mock_open()):
         
         results = [{"date": "2025-01-01"}]
         persist.save_report(results)
 
-@patch('persist.json.dump')
+@patch('eversports_scraper.persist.json.dump')
 def test_save_report_structure(mock_dump):
-    with patch('persist.ensure_data_dir'), \
+    with patch('eversports_scraper.persist.ensure_data_dir'), \
          patch('builtins.open', mock_open()):
         
         results = [{"date": "2025-01-01"}]

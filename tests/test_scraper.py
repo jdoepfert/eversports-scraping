@@ -4,10 +4,10 @@ import os
 from datetime import datetime
 from unittest.mock import MagicMock, patch
 
-# Add parent directory to path to import scraper
+# Add parent directory to path to import eversports_scraper
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import scraper
+from eversports_scraper import scraper
 
 @pytest.fixture
 def mock_response():
@@ -42,17 +42,25 @@ def test_build_url():
     for cid in scraper.COURT_IDS:
         assert f"courts%5B%5D={cid}" in url
 
-@patch('scraper.cloudscraper.create_scraper')
-def test_fetch_booked_slots_success(mock_create_scraper, mock_scraper_obj):
-    mock_create_scraper.return_value = mock_scraper_obj
+@patch('eversports_scraper.scraper.cloudscraper.create_scraper')
+def test_fetch_booked_slots_success(mock_create_scraper):
+    mock_scraper = MagicMock()
+    mock_response = MagicMock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = {"slots": []}
+    mock_response.raise_for_status.return_value = None
+    mock_scraper.get.return_value = mock_response
+    mock_create_scraper.return_value = mock_scraper
+    
     data = scraper.fetch_booked_slots("2025-01-01")
     assert data == {"slots": []}
-    mock_scraper_obj.get.assert_called_once()
 
-@patch('scraper.cloudscraper.create_scraper')
-def test_fetch_booked_slots_failure(mock_create_scraper, mock_scraper_obj):
-    mock_create_scraper.return_value = mock_scraper_obj
-    mock_scraper_obj.get.side_effect = Exception("Network error")
+@patch('eversports_scraper.scraper.cloudscraper.create_scraper')
+def test_fetch_booked_slots_failure(mock_create_scraper):
+    mock_scraper = MagicMock()
+    mock_scraper.get.side_effect = Exception("Network error")
+    mock_create_scraper.return_value = mock_scraper
+    
     data = scraper.fetch_booked_slots("2025-01-01")
     assert data is None
 
@@ -84,9 +92,8 @@ def test_calculate_free_slots():
     assert len(free["10:00"]) == 1
     assert 77396 in free["10:00"]
 
-@patch('scraper.fetch_booked_slots')
+@patch('eversports_scraper.scraper.fetch_booked_slots')
 def test_get_day_availability(mock_fetch):
-    # Mock data
     mock_fetch.return_value = {
         "slots": [
             {"date": "2025-01-01", "start": "1015", "court": 77394}

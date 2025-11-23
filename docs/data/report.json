@@ -1,5 +1,5 @@
 {
-  "last_updated": "2025-11-23T07:51:36.071179+00:00",
+  "last_updated": "2025-11-23T08:17:54.023084+00:00",
   "days": [
     {
       "date": "2025-11-21",
@@ -16,7 +16,7 @@
             77395,
             77396
           ],
-          "is_new": false
+          "is_new": true
         },
         {
           "time": "11:00",
@@ -28,7 +28,7 @@
             77394,
             77396
           ],
-          "is_new": false
+          "is_new": true
         },
         {
           "time": "11:45",
@@ -42,7 +42,7 @@
             77395,
             77396
           ],
-          "is_new": false
+          "is_new": true
         },
         {
           "time": "12:30",
@@ -54,7 +54,7 @@
             77394,
             77396
           ],
-          "is_new": false
+          "is_new": true
         },
         {
           "time": "13:15",
@@ -66,7 +66,7 @@
             77394,
             77396
           ],
-          "is_new": false
+          "is_new": true
         },
         {
           "time": "14:00",
@@ -78,7 +78,7 @@
             77394,
             77396
           ],
-          "is_new": false
+          "is_new": true
         },
         {
           "time": "14:45",
@@ -92,7 +92,7 @@
             77395,
             77396
           ],
-          "is_new": false
+          "is_new": true
         },
         {
           "time": "15:30",
@@ -102,7 +102,7 @@
           "court_ids": [
             77394
           ],
-          "is_new": false
+          "is_new": true
         },
         {
           "time": "22:15",
@@ -112,10 +112,10 @@
           "court_ids": [
             77394
           ],
-          "is_new": false
+          "is_new": true
         }
       ],
-      "new_count": 0,
+      "new_count": 9,
       "free_slots_map": {
         "10:15": [
           77394,
@@ -160,6 +160,16 @@
       "date": "2025-11-23",
       "slots": [
         {
+          "time": "11:00",
+          "courts": [
+            "Court 1"
+          ],
+          "court_ids": [
+            77394
+          ],
+          "is_new": true
+        },
+        {
           "time": "17:45",
           "courts": [
             "Court 1"
@@ -167,7 +177,7 @@
           "court_ids": [
             77394
           ],
-          "is_new": false
+          "is_new": true
         },
         {
           "time": "18:30",
@@ -179,7 +189,7 @@
             77395,
             77396
           ],
-          "is_new": false
+          "is_new": true
         },
         {
           "time": "19:15",
@@ -189,7 +199,7 @@
           "court_ids": [
             77396
           ],
-          "is_new": false
+          "is_new": true
         },
         {
           "time": "20:00",
@@ -203,7 +213,7 @@
             77395,
             77396
           ],
-          "is_new": false
+          "is_new": true
         },
         {
           "time": "20:45",
@@ -217,7 +227,7 @@
             77395,
             77396
           ],
-          "is_new": false
+          "is_new": true
         },
         {
           "time": "21:30",
@@ -231,7 +241,7 @@
             77395,
             77396
           ],
-          "is_new": false
+          "is_new": true
         },
         {
           "time": "22:15",
@@ -245,11 +255,14 @@
             77395,
             77396
           ],
-          "is_new": false
+          "is_new": true
         }
       ],
-      "new_count": 0,
+      "new_count": 8,
       "free_slots_map": {
+        "11:00": [
+          77394
+        ],
         "17:45": [
           77394
         ],
@@ -297,7 +310,7 @@
             77395,
             77396
           ],
-          "is_new": false
+          "is_new": true
         },
         {
           "time": "11:00",
@@ -311,7 +324,7 @@
             77395,
             77396
           ],
-          "is_new": false
+          "is_new": true
         },
         {
           "time": "11:45",
@@ -325,7 +338,7 @@
             77395,
             77396
           ],
-          "is_new": false
+          "is_new": true
         },
         {
           "time": "12:30",
@@ -339,7 +352,7 @@
             77395,
             77396
           ],
-          "is_new": false
+          "is_new": true
         },
         {
           "time": "13:15",
@@ -353,7 +366,7 @@
             77395,
             77396
           ],
-          "is_new": false
+          "is_new": true
         },
         {
           "time": "14:00",
@@ -367,7 +380,7 @@
             77395,
             77396
           ],
-          "is_new": false
+          "is_new": true
         },
         {
           "time": "14:45",
@@ -381,7 +394,7 @@
             77395,
             77396
           ],
-          "is_new": false
+          "is_new": true
         },
         {
           "time": "15:30",
@@ -395,7 +408,7 @@
             77395,
             77396
           ],
-          "is_new": false
+          "is_new": true
         },
         {
           "time": "16:15",
@@ -409,7 +422,7 @@
             77395,
             77396
           ],
-          "is_new": false
+          "is_new": true
         },
         {
           "time": "17:00",
@@ -423,7 +436,7 @@
             77395,
             77396
           ],
-          "is_new": false
+          "is_new": true
         },
         {
           "time": "17:45",
@@ -437,7 +450,7 @@
             77395,
             77396
           ],
-          "is_new": false
+          "is_new": true
         },
         {
           "time": "18:30",
@@ -451,7 +464,7 @@
             77395,
             77396
           ],
-          "is_new": false
+          "is_new": true
         },
         {
           "time": "19:15",
@@ -465,7 +478,7 @@
             77395,
             77396
           ],
-          "is_new": false
+          "is_new": true
         },
         {
           "time": "20:00",
@@ -479,7 +492,7 @@
             77395,
             77396
           ],
-          "is_new": false
+          "is_new": true
         },
         {
           "time": "20:45",
@@ -493,7 +506,7 @@
             77395,
             77396
           ],
-          "is_new": false
+          "is_new": true
         },
         {
           "time": "21:30",
@@ -507,7 +520,7 @@
             77395,
             77396
           ],
-          "is_new": false
+          "is_new": true
         },
         {
           "time": "22:15",
@@ -521,10 +534,10 @@
             77395,
             77396
           ],
-          "is_new": false
+          "is_new": true
         }
       ],
-      "new_count": 0,
+      "new_count": 17,
       "free_slots_map": {
         "10:15": [
           77394,

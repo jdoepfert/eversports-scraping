@@ -1,6 +1,7 @@
 import requests
 import logging
-import config
+
+from eversports_scraper import config
 
 logger = logging.getLogger(__name__)
 

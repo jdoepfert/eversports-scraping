@@ -4,7 +4,7 @@ import logging
 from datetime import datetime, timezone
 from typing import Dict, List
 
-import config
+from eversports_scraper import config
 
 logger = logging.getLogger(__name__)
 
