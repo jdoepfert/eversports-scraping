@@ -107,8 +107,8 @@ def test_get_day_availability(mock_fetch):
     # Assume COURT_IDS has 3 courts, 1 booked -> 2 free
     result = scraper.get_day_availability("2025-01-01", all_slots, history)
 
-    assert result["date"] == "2025-01-01"
-    assert len(result["slots"]) == 1
-    assert result["slots"][0]["time"] == "10:15"
-    assert len(result["slots"][0]["court_ids"]) == 2
-    assert result["new_count"] > 0  # Since history was empty, these are new
+    assert result.date == "2025-01-01"
+    assert len(result.slots) == 1
+    assert result.slots[0].time == "10:15"
+    assert len(result.slots[0].court_ids) == 2
+    assert result.new_count > 0  # Since history was empty, these are new

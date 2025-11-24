@@ -2,6 +2,7 @@ from datetime import datetime
 from unittest.mock import mock_open, patch
 
 from eversports_scraper import config, persist
+from eversports_scraper.models import DayAvailability
 
 
 def test_ensure_data_dir():
@@ -42,14 +43,14 @@ def test_save_history():
 
 def test_save_report():
     with patch("eversports_scraper.persist.ensure_data_dir"), patch("builtins.open", mock_open()):
-        results = [{"date": "2025-01-01"}]
+        results = [DayAvailability(date="2025-01-01", slots=[], new_count=0, free_slots_map={})]
         persist.save_report(results)
 
 
 @patch("eversports_scraper.persist.json.dump")
 def test_save_report_structure(mock_dump):
     with patch("eversports_scraper.persist.ensure_data_dir"), patch("builtins.open", mock_open()):
-        results = [{"date": "2025-01-01"}]
+        results = [DayAvailability(date="2025-01-01", slots=[], new_count=0, free_slots_map={})]
         persist.save_report(results)
 
         args, _ = mock_dump.call_args
@@ -57,4 +58,4 @@ def test_save_report_structure(mock_dump):
         assert "last_updated" in data
         datetime.fromisoformat(data["last_updated"])
         assert "days" in data
-        assert data["days"] == results
+        assert data["days"][0]["date"] == "2025-01-01"

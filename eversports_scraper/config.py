@@ -4,7 +4,7 @@ import os
 logger = logging.getLogger(__name__)
 
 # --- File Paths ---
-DATA_DIR = "docs/data"
+DATA_DIR = "public/data"
 HISTORY_FILE = os.path.join(DATA_DIR, "availability.json")
 REPORT_FILE = os.path.join(DATA_DIR, "report.json")
 

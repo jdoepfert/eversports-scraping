@@ -1,6 +1,7 @@
 from unittest.mock import MagicMock, patch
 
 from eversports_scraper import main as main_module
+from eversports_scraper.models import DayAvailability, Slot
 
 
 @patch("eversports_scraper.main.requests.get")
@@ -45,12 +46,12 @@ def test_main_flow(
 
     # Mock return for get_day_availability
     # Return a day with new slots to trigger telegram
-    mock_get_day.return_value = {
-        "date": "2025-01-01",
-        "slots": [{"time": "10:00", "courts": ["Court 1"], "is_new": True}],
-        "new_count": 1,
-        "free_slots_map": {"10:00": [77394]},
-    }
+    mock_get_day.return_value = DayAvailability(
+        date="2025-01-01",
+        slots=[Slot(time="10:00", courts=["Court 1"], court_ids=[77394], is_new=True)],
+        new_count=1,
+        free_slots_map={"10:00": [77394]},
+    )
 
     with patch("eversports_scraper.main.parse_arguments") as mock_args:
         mock_args.return_value = MagicMock(verbose=False)
@@ -143,12 +144,12 @@ def test_main_flow_csv_fallback(
 def test_main_no_new_slots(mock_send_telegram, mock_get_day, mock_get_slots, mock_fetch_dates):
     mock_fetch_dates.return_value = ["2025-01-01"]
     mock_get_slots.return_value = ["10:00"]
-    mock_get_day.return_value = {
-        "date": "2025-01-01",
-        "slots": [{"time": "10:00", "courts": ["Court 1"], "is_new": False}],
-        "new_count": 0,
-        "free_slots_map": {"10:00": [77394]},
-    }
+    mock_get_day.return_value = DayAvailability(
+        date="2025-01-01",
+        slots=[Slot(time="10:00", courts=["Court 1"], court_ids=[77394], is_new=False)],
+        new_count=0,
+        free_slots_map={"10:00": [77394]},
+    )
 
     with patch("eversports_scraper.main.parse_arguments") as mock_args:
         mock_args.return_value = MagicMock(start_date=None, verbose=False)
