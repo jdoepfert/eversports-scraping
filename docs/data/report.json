@@ -1,5 +1,5 @@
 {
-  "last_updated": "2025-11-24T15:24:04.694408+00:00",
+  "last_updated": "2025-11-24T15:44:07.407676+00:00",
   "days": [
     {
       "date": "2025-11-26",
@@ -136,7 +136,7 @@
           "court_ids": [
             77395
           ],
-          "is_new": true
+          "is_new": false
         },
         {
           "time": "20:45",
@@ -175,7 +175,7 @@
           "is_new": false
         }
       ],
-      "new_count": 1,
+      "new_count": 0,
       "free_slots_map": {
         "10:15": [
           77394,
