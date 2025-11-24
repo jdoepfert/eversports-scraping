@@ -1,5 +1,5 @@
 {
-  "last_updated": "2025-11-24T08:26:26.803916+00:00",
+  "last_updated": "2025-11-24T08:51:28.827198+00:00",
   "days": [
     {
       "date": "2025-11-26",
@@ -131,14 +131,26 @@
           "is_new": false
         },
         {
-          "time": "21:30",
+          "time": "20:45",
           "courts": [
-            "Court 1"
+            "Court 3"
           ],
           "court_ids": [
-            77394
+            77396
           ],
-          "is_new": false
+          "is_new": true
+        },
+        {
+          "time": "21:30",
+          "courts": [
+            "Court 1",
+            "Court 3"
+          ],
+          "court_ids": [
+            77394,
+            77396
+          ],
+          "is_new": true
         },
         {
           "time": "22:15",
@@ -155,7 +167,7 @@
           "is_new": false
         }
       ],
-      "new_count": 0,
+      "new_count": 2,
       "free_slots_map": {
         "10:15": [
           77394,
@@ -202,8 +214,12 @@
           77395,
           77396
         ],
+        "20:45": [
+          77396
+        ],
         "21:30": [
-          77394
+          77394,
+          77396
         ],
         "22:15": [
           77394,
@@ -528,24 +544,28 @@
         {
           "time": "20:45",
           "courts": [
+            "Court 2",
             "Court 3"
           ],
           "court_ids": [
+            77395,
             77396
           ],
-          "is_new": false
+          "is_new": true
         },
         {
           "time": "21:30",
           "courts": [
             "Court 1",
+            "Court 2",
             "Court 3"
           ],
           "court_ids": [
             77394,
+            77395,
             77396
           ],
-          "is_new": false
+          "is_new": true
         },
         {
           "time": "22:15",
@@ -562,7 +582,7 @@
           "is_new": false
         }
       ],
-      "new_count": 0,
+      "new_count": 2,
       "free_slots_map": {
         "10:15": [
           77394,
@@ -610,10 +630,12 @@
           77396
         ],
         "20:45": [
+          77395,
           77396
         ],
         "21:30": [
           77394,
+          77395,
           77396
         ],
         "22:15": [
