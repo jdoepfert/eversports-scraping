@@ -18,22 +18,37 @@ def ensure_data_dir():
 def load_history() -> Dict:
     """Loads the previous availability state from a JSON file."""
     if not os.path.exists(config.HISTORY_FILE):
+        logger.info("No history file found. Starting fresh.")
         return {}
     try:
         with open(config.HISTORY_FILE, "r") as f:
             data: Dict = json.load(f)
-            return data
+            # Extract and log the timestamp if it exists
+            if "last_updated" in data:
+                logger.info(f"Loaded history from cache, last updated: {data['last_updated']}")
+                # Return only the availability data, not the metadata
+                return data.get("availability", {})
+            else:
+                # Legacy format without timestamp
+                logger.info("Loaded history (legacy format without timestamp)")
+                return data
     except (json.JSONDecodeError, IOError):
         logger.warning("Failed to load history file. Starting fresh.")
         return {}
 
 
 def save_history(history: Dict):
-    """Saves the current availability state to a JSON file."""
+    """Saves the current availability state to a JSON file with timestamp."""
     ensure_data_dir()
     try:
+        # Wrap history with metadata
+        data = {
+            "last_updated": datetime.now(timezone.utc).isoformat(),
+            "availability": history
+        }
         with open(config.HISTORY_FILE, "w") as f:
-            json.dump(history, f, indent=2)
+            json.dump(data, f, indent=2)
+        logger.info(f"Saved history to {config.HISTORY_FILE}")
     except IOError as e:
         logger.error(f"Failed to save history: {e}")
 
