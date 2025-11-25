@@ -13,7 +13,7 @@ venv:
 
 # Install production dependencies in venv
 install: venv
-	$(PIP) install .
+	$(PIP) install -e .
 
 # Install development dependencies in venv
 install-dev: venv
