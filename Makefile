@@ -1,10 +1,30 @@
 -include .env
 export
 
-.PHONY: install run serve clean test lint format type-check
+VENV := venv
+PYTHON := $(VENV)/bin/python
+PIP := $(VENV)/bin/pip
+
+.PHONY: install run serve clean test lint format type-check venv
+
+# Create virtual environment
+venv:
+	python3 -m venv $(VENV)
+	@echo "Virtual environment created. Activate with: source $(VENV)/bin/activate"
+
+# Install production dependencies in venv
+install: venv
+	$(PIP) install .
+	@echo "Dependencies installed in venv. Run 'source $(VENV)/bin/activate' to activate."
+
+# Install development dependencies in venv
+install-dev: venv
+	$(PIP) install -e .
+	$(PIP) install -r requirements-dev.txt
+	@echo "Dev dependencies installed in venv. Run 'source $(VENV)/bin/activate' to activate."
 
 test:
-	pytest tests/
+	$(PYTHON) -m pytest tests/
 
 lint:
 	ruff check .
@@ -15,21 +35,17 @@ format:
 type-check:
 	mypy .
 
-install:
-	pip install .
-
-install-dev:
-	pip install -e .
-	pip install -r requirements-dev.txt
-
 run:
-	python main.py
+	$(PYTHON) main.py
 
 serve:
-	python -m http.server 8000
+	$(PYTHON) -m http.server 8000
 
 clean:
 	rm -rf __pycache__
 	rm -rf public/data/*.json
+	rm -rf $(VENV)
+	find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
+	find . -name '*.pyc' -delete 2>/dev/null || true
 
 
