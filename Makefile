@@ -24,13 +24,13 @@ test:
 	$(PYTHON) -m pytest tests/
 
 lint:
-	ruff check .
+	$(PYTHON) -m ruff check .
 
 format:
-	ruff format .
+	$(PYTHON) -m ruff format .
 
 type-check:
-	mypy .
+	$(PYTHON) -m mypy .
 
 run:
 	$(PYTHON) main.py
