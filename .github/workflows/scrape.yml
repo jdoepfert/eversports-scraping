@@ -33,8 +33,6 @@ jobs:
         with:
           path: venv
           key: venv-${{ runner.os }}-${{ hashFiles('pyproject.toml') }}
-          restore-keys: |
-            venv-${{ runner.os }}-
 
       - name: Set up Python
         uses: actions/setup-python@v5
