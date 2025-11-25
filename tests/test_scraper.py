@@ -112,3 +112,82 @@ def test_get_day_availability(mock_fetch):
     assert result.slots[0].time == "10:15"
     assert len(result.slots[0].court_ids) == 2
     assert result.new_count > 0  # Since history was empty, these are new
+
+
+@patch("eversports_scraper.scraper.fetch_booked_slots")
+def test_get_day_availability_no_history(mock_fetch):
+    """Test that all slots are marked as 'new' when there's no history (first run)."""
+    # Mock: Court 1 is booked, Courts 2 and 3 are free at 10:15
+    mock_fetch.return_value = {"slots": [{"date": "2025-01-01", "start": "1015", "court": 77394}]}
+
+    all_slots = ["10:15"]
+    history = {}  # No availability.json exists yet
+
+    result = scraper.get_day_availability("2025-01-01", all_slots, history)
+
+    assert result is not None
+    assert result.date == "2025-01-01"
+    assert len(result.slots) == 1
+    
+    # Both free courts should be marked as new
+    slot = result.slots[0]
+    assert slot.time == "10:15"
+    assert slot.is_new is True
+    assert set(slot.court_ids) == {77395, 77396}  # Courts 2 and 3
+    assert result.new_count == 1
+
+
+@patch("eversports_scraper.scraper.fetch_booked_slots")
+def test_get_day_availability_with_history(mock_fetch):
+    """Test that only newly available courts are marked as 'new' when history exists."""
+    # Mock: Court 1 is booked, Courts 2 and 3 are free at 10:15
+    mock_fetch.return_value = {"slots": [{"date": "2025-01-01", "start": "1015", "court": 77394}]}
+
+    all_slots = ["10:15"]
+    # History shows Court 2 was already free, Court 3 is newly free
+    history = {
+        "2025-01-01": {
+            "10:15": [77395]  # Only Court 2 was free before
+        }
+    }
+
+    result = scraper.get_day_availability("2025-01-01", all_slots, history)
+
+    assert result is not None
+    assert result.date == "2025-01-01"
+    assert len(result.slots) == 1
+    
+    # Court 3 is newly free, so slot should be marked as new
+    slot = result.slots[0]
+    assert slot.time == "10:15"
+    assert slot.is_new is True  # Because Court 3 (77396) is newly available
+    assert set(slot.court_ids) == {77395, 77396}  # Both courts are free
+    assert result.new_count == 1
+
+
+@patch("eversports_scraper.scraper.fetch_booked_slots")
+def test_get_day_availability_no_new_slots(mock_fetch):
+    """Test that slots are NOT marked as 'new' when nothing changed since last run."""
+    # Mock: Court 1 is booked, Courts 2 and 3 are free at 10:15
+    mock_fetch.return_value = {"slots": [{"date": "2025-01-01", "start": "1015", "court": 77394}]}
+
+    all_slots = ["10:15"]
+    # History shows the exact same courts were already free
+    history = {
+        "2025-01-01": {
+            "10:15": [77395, 77396]  # Both courts were already free
+        }
+    }
+
+    result = scraper.get_day_availability("2025-01-01", all_slots, history)
+
+    assert result is not None
+    assert result.date == "2025-01-01"
+    assert len(result.slots) == 1
+    
+    # No changes, so slot should NOT be marked as new
+    slot = result.slots[0]
+    assert slot.time == "10:15"
+    assert slot.is_new is False  # Nothing changed
+    assert set(slot.court_ids) == {77395, 77396}
+    assert result.new_count == 0  # No new slots
