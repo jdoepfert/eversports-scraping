@@ -53,7 +53,8 @@ def test_main_flow(
         free_slots_map={"10:00": [77394]},
     )
 
-    with patch("eversports_scraper.main.parse_arguments") as mock_args:
+    with patch("eversports_scraper.main.parse_arguments") as mock_args, \
+         patch("eversports_scraper.main.config.TARGET_DATES_CSV_URL", "http://mock.url"):
         mock_args.return_value = MagicMock(verbose=False)
 
         main_module.main()
@@ -89,7 +90,8 @@ def test_main_flow_manual_override(
     mock_get_day.return_value = None  # No data found
     mock_fetch_dates.return_value = []  # Empty CSV to trigger fallback
 
-    with patch("eversports_scraper.main.parse_arguments") as mock_args:
+    with patch("eversports_scraper.main.parse_arguments") as mock_args, \
+         patch("eversports_scraper.main.config.TARGET_DATES_CSV_URL", "http://mock.url"):
         # Simulate CLI args
         mock_args.return_value = MagicMock(start_date="2025-01-01", days=1, verbose=False)
 
@@ -124,7 +126,8 @@ def test_main_flow_csv_fallback(
     mock_get_day.return_value = None
     mock_fetch_dates.return_value = []  # Empty CSV
 
-    with patch("eversports_scraper.main.parse_arguments") as mock_args:
+    with patch("eversports_scraper.main.parse_arguments") as mock_args, \
+         patch("eversports_scraper.main.config.TARGET_DATES_CSV_URL", "http://mock.url"):
         # No CLI args
         mock_args.return_value = MagicMock(start_date=None, days=3, verbose=False)
 
@@ -157,3 +160,4 @@ def test_main_no_new_slots(mock_send_telegram, mock_get_day, mock_get_slots, moc
         main_module.main()
 
         mock_send_telegram.assert_not_called()
+
