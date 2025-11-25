@@ -16,12 +16,22 @@ logger = logging.getLogger(__name__)
 
 
 def setup_logging(verbose: bool):
-    """Configures logging to stderr."""
+    """Configures logging to stderr with local time."""
+    import time
+    
     level = logging.DEBUG if verbose else logging.INFO
+    handler = logging.StreamHandler(sys.stderr)
+    formatter = logging.Formatter(
+        fmt="%(asctime)s [%(levelname)s]: %(name)s:%(lineno)d | %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S"
+    )
+    # Use local time instead of UTC for logging
+    formatter.converter = time.localtime
+    handler.setFormatter(formatter)
+    
     logging.basicConfig(
         level=level,
-        format="%(asctime)s [%(levelname)s]: %(name)s:%(lineno)d | %(message)s",
-        handlers=[logging.StreamHandler(sys.stderr)],
+        handlers=[handler],
     )
 
 

@@ -21,8 +21,9 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: public/data/availability.json
-          # 'key' is mandatory and unique for this run.
-          # 'restore-keys' is what actually finds the cache from the PREVIOUS run.
+          # 'key' is mandatory and unique for this run, but not really required here.
+          # 'restore-keys' is what actually finds the cache from the PREVIOUS run
+          # (it looks for the most recent cache with the given key prefix)
           key: availability-history-${{ github.run_id }}
           restore-keys: |
             availability-history-

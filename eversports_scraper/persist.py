@@ -1,7 +1,7 @@
 import json
 import logging
 import os
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Dict, List
 
 from eversports_scraper import config
@@ -24,24 +24,21 @@ def load_history() -> Dict:
         with open(config.HISTORY_FILE, "r") as f:
             data: Dict = json.load(f)
             # Expect new format with timestamp
-            if "last_updated" in data and "availability" in data:
-                logger.info(f"Loaded history from cache, last updated: {data['last_updated']}")
-                return data["availability"]
-            else:
-                logger.warning("History file has unexpected format. Starting fresh.")
-                return {}
+            logger.info(f"Loaded history from cache, last updated: {data['last_updated']}")
+            return data["availability"]
+
     except (json.JSONDecodeError, IOError):
         logger.warning("Failed to load history file. Starting fresh.")
         return {}
 
 
 def save_history(history: Dict):
-    """Saves the current availability state to a JSON file with timestamp."""
+    """Saves the current availability state to a JSON file with timestamp (local time)."""
     ensure_data_dir()
     try:
-        # Wrap history with metadata
+        # Wrap history with metadata using local time
         data = {
-            "last_updated": datetime.now(timezone.utc).isoformat(),
+            "last_updated": datetime.now().astimezone().isoformat(),
             "availability": history
         }
         with open(config.HISTORY_FILE, "w") as f:
@@ -52,12 +49,12 @@ def save_history(history: Dict):
 
 
 def save_report(results: List):
-    """Saves the availability report to a JSON file."""
+    """Saves the availability report to a JSON file with local time."""
     ensure_data_dir()
     try:
         # Convert Pydantic models to dicts if necessary
         serialized_results = [r.model_dump() if hasattr(r, "model_dump") else r for r in results]
-        data = {"last_updated": datetime.now(timezone.utc).isoformat(), "days": serialized_results}
+        data = {"last_updated": datetime.now().astimezone().isoformat(), "days": serialized_results}
         with open(config.REPORT_FILE, "w") as f:
             json.dump(data, f, indent=2)
         logger.info(f"Saved report to {config.REPORT_FILE}")
