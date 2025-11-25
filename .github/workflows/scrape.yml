@@ -28,6 +28,14 @@ jobs:
           restore-keys: |
             availability-history-
 
+      - name: Cache venv (runtime)
+        uses: actions/cache@v4
+        with:
+          path: venv
+          key: venv-${{ runner.os }}-${{ hashFiles('pyproject.toml') }}
+          restore-keys: |
+            venv-${{ runner.os }}-
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -39,6 +47,12 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: make install && make run
+
+      - name: Save venv cache
+        uses: actions/cache/save@v4
+        with:
+          path: venv
+          key: venv-${{ runner.os }}-${{ hashFiles('pyproject.toml') }}
 
       - name: Save history to cache
         uses: actions/cache/save@v4
