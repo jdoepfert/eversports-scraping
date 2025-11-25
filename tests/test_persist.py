@@ -49,7 +49,9 @@ def test_save_history(mock_ensure, mock_dump, mock_datetime):
     """Test that save_history wraps data with timestamp."""
     # Mock datetime to return a consistent timestamp
     mock_now = MagicMock()
-    mock_now.isoformat.return_value = "2025-01-01T12:00:00Z"
+    mock_astimezone = MagicMock()
+    mock_astimezone.isoformat.return_value = "2025-01-01T12:00:00Z"
+    mock_now.astimezone.return_value = mock_astimezone
     mock_datetime.now.return_value = mock_now
     
     with patch("builtins.open", mock_open()):
