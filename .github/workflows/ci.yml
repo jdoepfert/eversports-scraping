@@ -9,8 +9,6 @@ on:
 jobs:
   install:
     runs-on: ubuntu-latest
-    outputs:
-      venv-cache-key: ${{ steps.cache-venv.outputs.cache-primary-key }}
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python 3.10
@@ -20,7 +18,6 @@ jobs:
       # actions/cache restores the cache immediately if found.
       # If not found, it automatically saves the cache at the end of the job (post-run).
       - name: Cache virtual environment
-        id: cache-venv
         uses: actions/cache@v4
         with:
           path: venv
@@ -37,7 +34,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: venv
-          key: ${{ needs.install.outputs.venv-cache-key }}
+          key: venv-${{ runner.os }}-${{ hashFiles('pyproject.toml', 'requirements-dev.txt') }}
       - name: Run Linter
         run: make lint
 
@@ -50,7 +47,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: venv
-          key: ${{ needs.install.outputs.venv-cache-key }}
+          key: venv-${{ runner.os }}-${{ hashFiles('pyproject.toml', 'requirements-dev.txt') }}
       - name: Run Type Checker
         run: make type-check
 
@@ -63,6 +60,6 @@ jobs:
         uses: actions/cache@v4
         with:
           path: venv
-          key: ${{ needs.install.outputs.venv-cache-key }}
+          key: venv-${{ runner.os }}-${{ hashFiles('pyproject.toml', 'requirements-dev.txt') }}
       - name: Run Tests
         run: make test
