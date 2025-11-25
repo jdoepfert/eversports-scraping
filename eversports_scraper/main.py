@@ -92,7 +92,9 @@ def print_availability_report(day_data):
 def get_target_dates_list(args) -> List[str]:
     """Determines the list of target dates to scrape."""
     logger.info("Fetching target dates from CSV...")
-    target_dates = fetch_target_dates(config.TARGET_DATES_CSV_URL)
+    target_dates = []
+    if config.TARGET_DATES_CSV_URL:
+        target_dates = fetch_target_dates(config.TARGET_DATES_CSV_URL)
 
     if not target_dates:
         logger.warning("No target dates found in google sheet")

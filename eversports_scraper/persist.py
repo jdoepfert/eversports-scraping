@@ -25,7 +25,7 @@ def load_history() -> Dict:
             data: Dict = json.load(f)
             # Expect new format with timestamp
             logger.info(f"Loaded history from cache, last updated: {data['last_updated']}")
-            return data["availability"]
+            return dict(data["availability"])
 
     except (json.JSONDecodeError, IOError):
         logger.warning("Failed to load history file. Starting fresh.")
