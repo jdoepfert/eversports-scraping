@@ -33,15 +33,6 @@ def test_load_history(mock_exists):
 
 
 
-@patch("eversports_scraper.persist.config.HISTORY_FILE", "/tmp/test_history_legacy.json")
-@patch("os.path.exists")
-def test_load_history_legacy_format(mock_exists):
-    """Test loading history with legacy format (no timestamp)."""
-    mock_exists.return_value = True
-    test_data = '{"2025-01-01": {}}'
-    with patch("builtins.open", mock_open(read_data=test_data)):
-        history = persist.load_history()
-        assert history == {"2025-01-01": {}}
 
 
 def test_load_history_no_file():
