@@ -118,6 +118,25 @@ def test_check_time_overlap_no_interval():
     assert run.check_time_overlap("11:00", target_partial) is True
 
 
+def test_check_time_overlap_edge_cases():
+    """Test comprehensive edge cases including boundary touching slots."""
+    target = TargetDate(date="2025-01-01", start_time="17:00", end_time="21:00")
+    
+    # Overlapping cases
+    assert run.check_time_overlap("20:45", target) is True  # 15 min overlap at end
+    assert run.check_time_overlap("20:30", target) is True  # 30 min overlap
+    assert run.check_time_overlap("20:15", target) is True  # Ends exactly at interval end
+    assert run.check_time_overlap("16:30", target) is True  # 15 min overlap at start
+    assert run.check_time_overlap("17:00", target) is True  # Starts exactly at interval start
+    assert run.check_time_overlap("18:00", target) is True  # Fully within interval
+    
+    # Non-overlapping cases (touching only)
+    assert run.check_time_overlap("21:00", target) is False  # Starts when interval ends
+    assert run.check_time_overlap("16:15", target) is False  # Ends when interval starts
+    assert run.check_time_overlap("21:15", target) is False  # After interval
+    assert run.check_time_overlap("15:00", target) is False  # Before interval
+
+
 @patch("eversports_scraper.run.fetch_target_dates")
 @patch("eversports_scraper.run.scraper.get_all_slots")
 @patch("eversports_scraper.run.scraper.get_day_availability")
