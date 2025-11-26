@@ -4,13 +4,13 @@
 
 A Python scraper to monitor badminton court availability on Eversports for Squash House in Berlin.
 
-## Features
-- Scrapes availability for specified dates (configured via Google Sheet).
-- Sends Telegram notifications for new slots.
-- Generates a static web page showing availability in a calendar view.
-- Automated regular scraping via GitHub Actions.
+This tool allows you to:
+- **Monitor specific dates and times**: Configure exactly which slots you are interested in via a Google Sheet.
+- **Receive instant notifications**: Get Telegram alerts as soon as a matching slot becomes available.
+- **View availabilities in a dashboard**: Check a generated static web page for a calendar view of open courts.
+- **Keep up to date**: Runs automatically on a schedule via GitHub Actions.
 
-**Live Demo:** [https://jdoepfert.github.io/eversports-scraping/](https://jdoepfert.github.io/eversports-scraping/)
+**Live Demo Dashboard:** [https://jdoepfert.github.io/eversports-scraping/](https://jdoepfert.github.io/eversports-scraping/)
 
 ## Configuration
 
@@ -95,7 +95,6 @@ python -m eversports_scraper
 
 # Specify a start date and number of days to check
 python -m eversports_scraper --start-date 2025-11-26 --days 5
-
 ```
 
 **CLI Arguments:**
