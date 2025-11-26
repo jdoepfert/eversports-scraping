@@ -7,8 +7,10 @@ A Python scraper to monitor badminton court availability on Eversports for Squas
 ## Features
 - Scrapes availability for specified dates (configured via Google Sheet).
 - Sends Telegram notifications for new slots.
-- Generates a static availability report.
+- Generates a static web page showing availability in a calendar view.
 - Automated regular scraping via GitHub Actions.
+
+**Live Demo:** [https://jdoepfert.github.io/eversports-scraping/](https://jdoepfert.github.io/eversports-scraping/)
 
 ## Configuration
 
