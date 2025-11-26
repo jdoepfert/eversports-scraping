@@ -159,18 +159,14 @@ def get_target_dates_list(start_date_arg: str | None, days_arg: int) -> List[Tar
     return target_dates
 
 
-def notify_if_needed(total_new_slots: int, new_slots_messages: List[str], num_days: int):
-    """Sends a Telegram notification if new slots were found."""
-    if total_new_slots > 0:
-        print(f"\n*** Total NEW slots found across {num_days} days: {total_new_slots} ***")
+def send_notification(total_new_slots: int, new_slots_messages: List[str]):
+    """Sends a Telegram notification about new slots."""
+    print(f"\n*** Total NEW slots found: {total_new_slots} ***")
 
-        # Send Telegram notification
-        message = f"🏸 *New Badminton Slots Found!* ({total_new_slots})\n\n" + "\n\n".join(new_slots_messages)
-        message += "\n\n[Book Now](https://www.eversports.de/widget/w/c7o9ft)"
-        telegram_notifier.send_telegram_message(message)
-
-    else:
-        print(f"\nNo new slots found across {num_days} days.")
+    # Send Telegram notification
+    message = f"🏸 *New Badminton Slots Found!* ({total_new_slots})\n\n" + "\n\n".join(new_slots_messages)
+    message += "\n\n[Book Now](https://www.eversports.de/widget/w/c7o9ft)"
+    telegram_notifier.send_telegram_message(message)
 
 
 def run(start_date: str | None = None, days: int = 3):
@@ -188,6 +184,7 @@ def run(start_date: str | None = None, days: int = 3):
     results = []
     total_new_slots = 0
     new_slots_messages = []
+    total_filtered_new_slots = 0
 
     for target_date in target_dates:
         date_str = target_date.date
@@ -209,6 +206,7 @@ def run(start_date: str | None = None, days: int = 3):
             ]
             
             if filtered_new_slots:
+                total_filtered_new_slots += len(filtered_new_slots)
                 msg_lines = [f"*{date_str}*:"]
                 for s in filtered_new_slots:
                     msg_lines.append(f"  - {s.time} ({', '.join(s.courts)})")
@@ -220,11 +218,8 @@ def run(start_date: str | None = None, days: int = 3):
 
     persist.save_history(current_state)
     persist.save_report(results)
-
-    # Recalculate total based on filtered slots
-    total_filtered_new_slots = sum(
-        len(msg.split('\n')) - 1  # Subtract 1 for the date header line
-        for msg in new_slots_messages
-    )
     
-    notify_if_needed(total_filtered_new_slots, new_slots_messages, len(target_dates))
+    if total_filtered_new_slots > 0:
+        send_notification(total_filtered_new_slots, new_slots_messages)
+    else:
+        print(f"\nNo new slots found across {len(target_dates)} days.")
