@@ -17,7 +17,7 @@ class DayAvailability(BaseModel):
     free_slots_map: Dict[str, List[int]]
 
 
-class TargetDate(BaseModel):
+class TargetInterval(BaseModel):
     date: str  # ISO format YYYY-MM-DD
     start_time: str | None = None  # HH:MM format, local time
     end_time: str | None = None  # HH:MM format, local time

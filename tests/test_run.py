@@ -1,7 +1,36 @@
 from unittest.mock import MagicMock, patch
 
-from eversports_scraper import run
-from eversports_scraper.models import DayAvailability, Slot, TargetDate
+from eversports_scraper.models import DayAvailability, Slot, TargetInterval
+from eversports_scraper.run import (
+    fetch_target_dates,
+    check_time_overlap,
+    get_target_dates_list,
+    _parse_target_date_row,
+    _filter_new_slots,
+    _process_date,
+    run
+)
+
+
+def test_parse_target_date_row_valid():
+    row = ["26.11.2025", "10:00", "12:00"]
+    result = _parse_target_date_row(row)
+    assert isinstance(result, TargetInterval)
+    assert result.date == "2025-11-26"
+    assert result.start_time == "10:00"
+    assert result.end_time == "12:00"
+
+
+def test_parse_target_date_row_header():
+    row = ["Date", "Start", "End"]
+    result = _parse_target_date_row(row)
+    assert result is None
+
+
+def test_parse_target_date_row_invalid_date():
+    row = ["invalid", "10:00", "12:00"]
+    result = _parse_target_date_row(row)
+    assert result is None
 
 
 @patch("eversports_scraper.run.requests.get")
@@ -12,7 +41,7 @@ def test_fetch_target_dates_success(mock_get):
     mock_response.raise_for_status.return_value = None
     mock_get.return_value = mock_response
 
-    dates = run.fetch_target_dates("http://fake.url")
+    dates = fetch_target_dates("http://fake.url")
     assert len(dates) == 2
     assert dates[0].date == "2025-11-21"
     assert dates[1].date == "2025-11-23"
@@ -23,7 +52,7 @@ def test_fetch_target_dates_success(mock_get):
 @patch("eversports_scraper.run.requests.get")
 def test_fetch_target_dates_failure(mock_get):
     mock_get.side_effect = Exception("Network error")
-    dates = run.fetch_target_dates("http://fake.url")
+    dates = fetch_target_dates("http://fake.url")
     assert dates == []
 
 
@@ -36,7 +65,7 @@ def test_fetch_target_dates_with_header(mock_get):
     mock_response.raise_for_status.return_value = None
     mock_get.return_value = mock_response
 
-    dates = run.fetch_target_dates("http://fake.url")
+    dates = fetch_target_dates("http://fake.url")
     # Should skip the header and parse only the 2 data rows
     assert len(dates) == 2
     assert dates[0].date == "2025-11-21"
@@ -52,7 +81,7 @@ def test_fetch_target_dates_with_times(mock_get):
     mock_response.raise_for_status.return_value = None
     mock_get.return_value = mock_response
 
-    dates = run.fetch_target_dates("http://fake.url")
+    dates = fetch_target_dates("http://fake.url")
     assert len(dates) == 2
     assert dates[0].date == "2025-11-21"
     assert dates[0].start_time == "10:00"
@@ -71,7 +100,7 @@ def test_fetch_target_dates_partial_times(mock_get):
     mock_response.raise_for_status.return_value = None
     mock_get.return_value = mock_response
 
-    dates = run.fetch_target_dates("http://fake.url")
+    dates = fetch_target_dates("http://fake.url")
     assert len(dates) == 2
     assert dates[0].start_time == "10:00"
     assert dates[0].end_time is None
@@ -81,60 +110,60 @@ def test_fetch_target_dates_partial_times(mock_get):
 
 def test_check_time_overlap_within_range():
     """Test slot fully within interval."""
-    target = TargetDate(date="2025-01-01", start_time="10:00", end_time="14:00")
-    assert run.check_time_overlap("11:00", target) is True
-    assert run.check_time_overlap("10:15", target) is True
-    assert run.check_time_overlap("13:00", target) is True
+    target = TargetInterval(date="2025-01-01", start_time="10:00", end_time="14:00")
+    assert check_time_overlap("11:00", target) is True
+    assert check_time_overlap("10:15", target) is True
+    assert check_time_overlap("13:00", target) is True
 
 
 def test_check_time_overlap_partial():
     """Test slot partially overlaps interval."""
-    target = TargetDate(date="2025-01-01", start_time="10:00", end_time="11:00")
+    target = TargetInterval(date="2025-01-01", start_time="10:00", end_time="11:00")
     # Slot 10:15-11:00 overlaps with 10:00-11:00
-    assert run.check_time_overlap("10:15", target) is True
+    assert check_time_overlap("10:15", target) is True
     # Slot 10:30-11:15 overlaps with 10:00-11:00 (ends after interval)
-    assert run.check_time_overlap("10:30", target) is True
+    assert check_time_overlap("10:30", target) is True
 
 
 def test_check_time_overlap_outside():
     """Test slot outside interval."""
-    target = TargetDate(date="2025-01-01", start_time="10:00", end_time="11:00")
+    target = TargetInterval(date="2025-01-01", start_time="10:00", end_time="11:00")
     # Slot 11:00-11:45 starts exactly when interval ends
-    assert run.check_time_overlap("11:00", target) is False
+    assert check_time_overlap("11:00", target) is False
     # Slot 09:00-09:45 ends before interval starts
-    assert run.check_time_overlap("09:00", target) is False
+    assert check_time_overlap("09:00", target) is False
     # Slot 14:00-14:45 is way outside
-    assert run.check_time_overlap("14:00", target) is False
+    assert check_time_overlap("14:00", target) is False
 
 
 def test_check_time_overlap_no_interval():
     """Test behavior when no interval is specified."""
-    target = TargetDate(date="2025-01-01", start_time=None, end_time=None)
-    assert run.check_time_overlap("10:00", target) is True
-    assert run.check_time_overlap("18:00", target) is True
+    target = TargetInterval(date="2025-01-01", start_time=None, end_time=None)
+    assert check_time_overlap("10:00", target) is True
+    assert check_time_overlap("18:00", target) is True
     
     # Partial interval (only start or only end) should also return True
-    target_partial = TargetDate(date="2025-01-01", start_time="10:00", end_time=None)
-    assert run.check_time_overlap("11:00", target_partial) is True
+    target_partial = TargetInterval(date="2025-01-01", start_time="10:00", end_time=None)
+    assert check_time_overlap("11:00", target_partial) is True
 
 
 def test_check_time_overlap_edge_cases():
     """Test comprehensive edge cases including boundary touching slots."""
-    target = TargetDate(date="2025-01-01", start_time="17:00", end_time="21:00")
+    target = TargetInterval(date="2025-01-01", start_time="17:00", end_time="21:00")
     
     # Overlapping cases
-    assert run.check_time_overlap("20:45", target) is True  # 15 min overlap at end
-    assert run.check_time_overlap("20:30", target) is True  # 30 min overlap
-    assert run.check_time_overlap("20:15", target) is True  # Ends exactly at interval end
-    assert run.check_time_overlap("16:30", target) is True  # 15 min overlap at start
-    assert run.check_time_overlap("17:00", target) is True  # Starts exactly at interval start
-    assert run.check_time_overlap("18:00", target) is True  # Fully within interval
+    assert check_time_overlap("20:45", target) is True  # 15 min overlap at end
+    assert check_time_overlap("20:30", target) is True  # 30 min overlap
+    assert check_time_overlap("20:15", target) is True  # Ends exactly at interval end
+    assert check_time_overlap("16:30", target) is True  # 15 min overlap at start
+    assert check_time_overlap("17:00", target) is True  # Starts exactly at interval start
+    assert check_time_overlap("18:00", target) is True  # Fully within interval
     
     # Non-overlapping cases (touching only)
-    assert run.check_time_overlap("21:00", target) is False  # Starts when interval ends
-    assert run.check_time_overlap("16:15", target) is False  # Ends when interval starts
-    assert run.check_time_overlap("21:15", target) is False  # After interval
-    assert run.check_time_overlap("15:00", target) is False  # Before interval
+    assert check_time_overlap("21:00", target) is False  # Starts when interval ends
+    assert check_time_overlap("16:15", target) is False  # Ends when interval starts
+    assert check_time_overlap("21:15", target) is False  # After interval
+    assert check_time_overlap("15:00", target) is False  # Before interval
 
 
 @patch("eversports_scraper.run.fetch_target_dates")
@@ -154,7 +183,7 @@ def test_main_flow(
     mock_fetch_dates,
 ):
     # Setup mocks
-    mock_fetch_dates.return_value = [TargetDate(date="2025-01-01", start_time=None, end_time=None)]
+    mock_fetch_dates.return_value = [TargetInterval(date="2025-01-01", start_time=None, end_time=None)]
     mock_get_slots.return_value = ["10:00"]
     mock_load_history.return_value = {}
 
@@ -168,7 +197,7 @@ def test_main_flow(
     )
 
     with patch("eversports_scraper.run.config.TARGET_DATES_CSV_URL", "http://mock.url"):
-        run.run(start_date=None, days=3)
+        run(start_date=None, days=3)
 
         mock_fetch_dates.assert_called_once()
         mock_get_slots.assert_called_once()
@@ -202,7 +231,7 @@ def test_main_flow_manual_override(
     mock_fetch_dates.return_value = []  # Empty CSV to trigger fallback
 
     with patch("eversports_scraper.run.config.TARGET_DATES_CSV_URL", "http://mock.url"):
-        run.run(start_date="2025-01-01", days=1)
+        run(start_date="2025-01-01", days=1)
 
         # Should fetch from CSV
         mock_fetch_dates.assert_called_once()
@@ -234,7 +263,7 @@ def test_main_flow_csv_fallback(
     mock_fetch_dates.return_value = []  # Empty CSV
 
     with patch("eversports_scraper.run.config.TARGET_DATES_CSV_URL", "http://mock.url"):
-        run.run(start_date=None, days=3)
+        run(start_date=None, days=3)
 
         # Should fetch from CSV
         mock_fetch_dates.assert_called_once()
@@ -248,7 +277,7 @@ def test_main_flow_csv_fallback(
 @patch("eversports_scraper.run.scraper.get_day_availability")
 @patch("eversports_scraper.run.telegram_notifier.send_telegram_message")
 def test_main_no_new_slots(mock_send_telegram, mock_get_day, mock_get_slots, mock_fetch_dates):
-    mock_fetch_dates.return_value = [TargetDate(date="2025-01-01", start_time=None, end_time=None)]
+    mock_fetch_dates.return_value = [TargetInterval(date="2025-01-01", start_time=None, end_time=None)]
     mock_get_slots.return_value = ["10:00"]
     mock_get_day.return_value = DayAvailability(
         date="2025-01-01",
@@ -257,7 +286,7 @@ def test_main_no_new_slots(mock_send_telegram, mock_get_day, mock_get_slots, moc
         free_slots_map={"10:00": [77394]},
     )
 
-    run.run(start_date=None, days=3)
+    run(start_date=None, days=3)
 
     mock_send_telegram.assert_not_called()
 
@@ -281,7 +310,7 @@ def test_notification_filtered_by_time(
     """Test that notifications only include slots within the time interval."""
     # Set up a target date with time interval 10:00-12:00
     mock_fetch_dates.return_value = [
-        TargetDate(date="2025-01-01", start_time="10:00", end_time="12:00")
+        TargetInterval(date="2025-01-01", start_time="10:00", end_time="12:00")
     ]
     mock_get_slots.return_value = ["10:15", "11:00", "14:00"]
     mock_load_history.return_value = {}
@@ -299,7 +328,7 @@ def test_notification_filtered_by_time(
     )
 
     with patch("eversports_scraper.run.config.TARGET_DATES_CSV_URL", "http://mock.url"):
-        run.run(start_date=None, days=3)
+        run(start_date=None, days=3)
 
         # Should send telegram
         mock_send_telegram.assert_called_once()

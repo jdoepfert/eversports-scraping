@@ -3,17 +3,67 @@ import io
 import logging
 import sys
 from datetime import datetime, timedelta
-from typing import List
+from typing import List, Dict, Optional, Tuple
 
 import requests
 
 from eversports_scraper import config, persist, scraper, telegram_notifier
-from eversports_scraper.models import TargetDate
+from eversports_scraper.models import TargetInterval, DayAvailability, Slot
 
 logger = logging.getLogger(__name__)
 
 
-def fetch_target_dates(url: str) -> List[TargetDate]:
+def _parse_target_date_row(row: List[str]) -> TargetInterval | None:
+    """Parses a single CSV row into a TargetInterval object."""
+    if not row:
+        return None
+        
+    date_str = row[0].strip()
+    
+    # Skip likely header rows (case-insensitive check for common header text)
+    if date_str.lower() in ['date', 'datum', 'day', 'tag']:
+        logger.debug(f"Skipping header row: {row}")
+        return None
+    
+    try:
+        # Parse DD.MM.YYYY and convert to YYYY-MM-DD
+        dt = datetime.strptime(date_str, "%d.%m.%Y")
+        iso_date = dt.strftime("%Y-%m-%d")
+        
+        # Parse optional time columns
+        start_time = None
+        end_time = None
+        
+        if len(row) > 1 and row[1].strip():
+            start_time = row[1].strip()
+            # Validate time format
+            try:
+                datetime.strptime(start_time, "%H:%M")
+            except ValueError:
+                logger.warning(f"Invalid start time format '{start_time}' for {date_str}, ignoring")
+                start_time = None
+        
+        if len(row) > 2 and row[2].strip():
+            end_time = row[2].strip()
+            # Validate time format
+            try:
+                datetime.strptime(end_time, "%H:%M")
+            except ValueError:
+                logger.warning(f"Invalid end time format '{end_time}' for {date_str}, ignoring")
+                end_time = None
+        
+        return TargetInterval(
+            date=iso_date,
+            start_time=start_time,
+            end_time=end_time
+        )
+    except ValueError:
+        # Silently skip rows that don't parse as dates (likely headers or invalid entries)
+        logger.debug(f"Skipping row with invalid date format: {date_str}")
+        return None
+
+
+def fetch_target_dates(url: str) -> List[TargetInterval]:
     """Fetches target dates with optional time intervals from a Google Sheet CSV.
     
     Expected CSV format:
@@ -31,50 +81,9 @@ def fetch_target_dates(url: str) -> List[TargetDate]:
         target_dates = []
 
         for row in reader:
-            if not row:
-                continue
-            date_str = row[0].strip()
-            
-            # Skip likely header rows (case-insensitive check for common header text)
-            if date_str.lower() in ['date', 'datum', 'day', 'tag']:
-                logger.debug(f"Skipping header row: {row}")
-                continue
-            
-            try:
-                # Parse DD.MM.YYYY and convert to YYYY-MM-DD
-                dt = datetime.strptime(date_str, "%d.%m.%Y")
-                iso_date = dt.strftime("%Y-%m-%d")
-                
-                # Parse optional time columns
-                start_time = None
-                end_time = None
-                
-                if len(row) > 1 and row[1].strip():
-                    start_time = row[1].strip()
-                    # Validate time format
-                    try:
-                        datetime.strptime(start_time, "%H:%M")
-                    except ValueError:
-                        logger.warning(f"Invalid start time format '{start_time}' for {date_str}, ignoring")
-                        start_time = None
-                
-                if len(row) > 2 and row[2].strip():
-                    end_time = row[2].strip()
-                    # Validate time format
-                    try:
-                        datetime.strptime(end_time, "%H:%M")
-                    except ValueError:
-                        logger.warning(f"Invalid end time format '{end_time}' for {date_str}, ignoring")
-                        end_time = None
-                
-                target_dates.append(TargetDate(
-                    date=iso_date,
-                    start_time=start_time,
-                    end_time=end_time
-                ))
-            except ValueError:
-                # Silently skip rows that don't parse as dates (likely headers or invalid entries)
-                logger.debug(f"Skipping row with invalid date format: {date_str}")
+            target_date = _parse_target_date_row(row)
+            if target_date:
+                target_dates.append(target_date)
 
         return target_dates
     except Exception as e:
@@ -99,12 +108,12 @@ def print_availability_report(day_data):
         print(f"Summary: No courts available for {date_str}.")
 
 
-def check_time_overlap(slot_time: str, target_date: TargetDate) -> bool:
+def check_time_overlap(slot_time: str, target_date: TargetInterval) -> bool:
     """Checks if a slot overlaps with the target date's time interval.
     
     Args:
         slot_time: Start time of the slot in HH:MM format (e.g., "10:15")
-        target_date: TargetDate with optional start_time and end_time
+        target_date: TargetInterval with optional start_time and end_time
     
     Returns:
         True if the slot overlaps with the interval or no interval is specified
@@ -126,7 +135,7 @@ def check_time_overlap(slot_time: str, target_date: TargetDate) -> bool:
     return slot_start < interval_end and slot_end > interval_start
 
 
-def get_target_dates_list(start_date_arg: str | None, days_arg: int) -> List[TargetDate]:
+def get_target_dates_list(start_date_arg: str | None, days_arg: int) -> List[TargetInterval]:
     """Determines the list of target dates to scrape."""
     logger.info("Fetching target dates from CSV...")
     target_dates = []
@@ -146,7 +155,7 @@ def get_target_dates_list(start_date_arg: str | None, days_arg: int) -> List[Tar
 
         for i in range(days_arg):
             current_date = start_date + timedelta(days=i)
-            target_dates.append(TargetDate(
+            target_dates.append(TargetInterval(
                 date=current_date.strftime("%Y-%m-%d"),
                 start_time=None,
                 end_time=None
@@ -159,67 +168,82 @@ def get_target_dates_list(start_date_arg: str | None, days_arg: int) -> List[Tar
     return target_dates
 
 
-def send_notification(total_new_slots: int, new_slots_messages: List[str]):
+def send_notification(total_new_slots: int, new_slots_data: List[Tuple[str, List[Slot]]]):
     """Sends a Telegram notification about new slots."""
     print(f"\n*** Total NEW slots found: {total_new_slots} ***")
 
+    # Format the message
+    msg_lines = []
+    for date_str, slots in new_slots_data:
+        msg_lines.append(f"*{date_str}*:")
+        for s in slots:
+            msg_lines.append(f"  - {s.time} ({', '.join(s.courts)})")
+    
+    formatted_slots_msg = "\n".join(msg_lines)
+
     # Send Telegram notification
-    message = f"🏸 *New Badminton Slots Found!* ({total_new_slots})\n\n" + "\n\n".join(new_slots_messages)
+    message = f"🏸 *New Badminton Slots Found!* ({total_new_slots})\n\n{formatted_slots_msg}"
     message += "\n\n[Book Now](https://www.eversports.de/widget/w/c7o9ft)"
     telegram_notifier.send_telegram_message(message)
+
+
+def _filter_new_slots(day_data: DayAvailability, target_interval: TargetInterval) -> List[Slot]:
+    """Filters new slots based on the target interval."""
+    # Collect new slots for notification, filtered by time interval
+    new_slots = [s for s in day_data.slots if s.is_new]
+    
+    # Filter slots based on time interval
+    return [
+        s for s in new_slots 
+        if check_time_overlap(s.time, target_interval)
+    ]
+
+
+def _process_date(target_interval: TargetInterval, all_slots: Dict, history: Dict) -> Optional[DayAvailability]:
+    """Processes availability for a single date."""
+    date_str = target_interval.date
+    return scraper.get_day_availability(date_str, all_slots, history)
 
 
 def run(start_date: str | None = None, days: int = 3):
     """Core orchestration logic. Loops through target dates, checks for availability, and 
     sends notifications when new slots are found."""
     
-    target_dates = get_target_dates_list(start_date, days)
-    date_strs = [td.date for td in target_dates]
-    print(f"Checking availability for {len(target_dates)} days: {', '.join(date_strs)}")
+    target_intervals = get_target_dates_list(start_date, days)
+    date_strs = [td.date for td in target_intervals]
+    print(f"Checking availability for {len(target_intervals)} days: {', '.join(date_strs)}")
 
     all_slots = scraper.get_all_slots()
     history = persist.load_history()
 
-    current_state = {}
-    results = []
-    total_new_slots = 0
-    new_slots_messages = []
-    total_filtered_new_slots = 0
+    # State tracking variables
+    current_state = {}  # Maps date -> list of free slot IDs (for persistence)
+    day_availabilities = []        # List of DayAvailability objects (for report generation)
+    new_slots_data = [] # List of tuples (date, slots) for notification
 
-    for target_date in target_dates:
-        date_str = target_date.date
-        day_data = scraper.get_day_availability(date_str, all_slots, history)
+    for target_interval in target_intervals:
+        date_str = target_interval.date
+        day_availability = scraper.get_day_availability(date_str, all_slots, history)
 
-        if day_data:
-            print_availability_report(day_data)
-            total_new_slots += day_data.new_count
-            current_state[date_str] = day_data.free_slots_map
-            results.append(day_data)
+        if day_availability:
+            print_availability_report(day_availability)
+            current_state[date_str] = day_availability.free_slots_map
+            day_availabilities.append(day_availability)
 
-            # Collect new slots for notification, filtered by time interval
-            new_slots = [s for s in day_data.slots if s.is_new]
-            
-            # Filter slots based on time interval
-            filtered_new_slots = [
-                s for s in new_slots 
-                if check_time_overlap(s.time, target_date)
-            ]
+            filtered_new_slots = _filter_new_slots(day_availability, target_interval)
             
             if filtered_new_slots:
-                total_filtered_new_slots += len(filtered_new_slots)
-                msg_lines = [f"*{date_str}*:"]
-                for s in filtered_new_slots:
-                    msg_lines.append(f"  - {s.time} ({', '.join(s.courts)})")
-                new_slots_messages.append("\n".join(msg_lines))
+                new_slots_data.append((date_str, filtered_new_slots))
 
         elif date_str in history:
             # Preserve history if fetch failed
             current_state[date_str] = history[date_str]
 
     persist.save_history(current_state)
-    persist.save_report(results)
+    persist.save_report(day_availabilities)
     
+    total_filtered_new_slots = sum(len(slots) for _, slots in new_slots_data)
     if total_filtered_new_slots > 0:
-        send_notification(total_filtered_new_slots, new_slots_messages)
+        send_notification(total_filtered_new_slots, new_slots_data)
     else:
-        print(f"\nNo new slots found across {len(target_dates)} days.")
+        print(f"\nNo new slots found across {len(target_intervals)} days.")
