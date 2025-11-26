@@ -33,7 +33,7 @@ type-check:
 	$(PYTHON) -m mypy .
 
 run:
-	$(PYTHON) main.py
+	$(PYTHON) -m eversports_scraper
 
 serve:
 	$(PYTHON) -m http.server 8000

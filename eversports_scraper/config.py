@@ -15,4 +15,4 @@ TARGET_DATES_CSV_URL = os.environ.get("TARGET_DATES_CSV_URL")
 TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
 TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID")
 if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
-    logger.warning("Telegram configuration incomplete. Skipping notification.")
+    logger.warning("Telegram configuration incomplete. Skipping notifications.")

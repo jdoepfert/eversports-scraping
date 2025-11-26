@@ -1,4 +1,3 @@
-import argparse
 import csv
 import io
 import logging
@@ -10,29 +9,7 @@ import requests
 
 from eversports_scraper import config, persist, scraper, telegram_notifier
 
-# --- Logging Setup ---
-
 logger = logging.getLogger(__name__)
-
-
-def setup_logging(verbose: bool):
-    """Configures logging to stderr with local time."""
-    import time
-    
-    level = logging.DEBUG if verbose else logging.INFO
-    handler = logging.StreamHandler(sys.stderr)
-    formatter = logging.Formatter(
-        fmt="%(asctime)s [%(levelname)s]: %(name)s:%(lineno)d | %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S"
-    )
-    # Use local time instead of UTC for logging
-    formatter.converter = time.localtime
-    handler.setFormatter(formatter)
-    
-    logging.basicConfig(
-        level=level,
-        handlers=[handler],
-    )
 
 
 def fetch_target_dates(url: str) -> List[str]:
@@ -63,15 +40,6 @@ def fetch_target_dates(url: str) -> List[str]:
         return []
 
 
-def parse_arguments():
-    """Parses command line arguments."""
-    parser = argparse.ArgumentParser(description="Scrape Eversports for free badminton courts.")
-    parser.add_argument("--start-date", type=str, help="Start date in YYYY-MM-DD format. Defaults to today.")
-    parser.add_argument("--days", type=int, default=3, help="Number of days to check. Defaults to 3.")
-    parser.add_argument("-v", "--verbose", action="store_true", help="Enable verbose logging.")
-    return parser.parse_args()
-
-
 def print_availability_report(day_data):
     """Prints the formatted availability report to stdout."""
     date_str = day_data.date
@@ -89,7 +57,7 @@ def print_availability_report(day_data):
         print(f"Summary: No courts available for {date_str}.")
 
 
-def get_target_dates_list(args) -> List[str]:
+def get_target_dates_list(start_date_arg: str | None, days_arg: int) -> List[str]:
     """Determines the list of target dates to scrape."""
     logger.info("Fetching target dates from CSV...")
     target_dates = []
@@ -98,16 +66,16 @@ def get_target_dates_list(args) -> List[str]:
 
     if not target_dates:
         logger.warning("No target dates found in google sheet")
-        if args.start_date:
+        if start_date_arg:
             try:
-                start_date = datetime.strptime(args.start_date, "%Y-%m-%d")
+                start_date = datetime.strptime(start_date_arg, "%Y-%m-%d")
             except ValueError:
                 logger.error("Error: Start date must be in YYYY-MM-DD format.")
                 sys.exit(1)
         else:
             start_date = datetime.now()
 
-        for i in range(args.days):
+        for i in range(days_arg):
             current_date = start_date + timedelta(days=i)
             target_dates.append(current_date.strftime("%Y-%m-%d"))
 
@@ -132,11 +100,11 @@ def notify_if_needed(total_new_slots: int, new_slots_messages: List[str], num_da
         print(f"\nNo new slots found across {num_days} days.")
 
 
-def main():
-    args = parse_arguments()
-    setup_logging(args.verbose)
-
-    target_dates = get_target_dates_list(args)
+def run(start_date: str | None = None, days: int = 3):
+    """Core orchestration logic. Loops through target dates, checks for availability, and 
+    sends notifications when new slots are found."""
+    
+    target_dates = get_target_dates_list(start_date, days)
     print(f"Checking availability for {len(target_dates)} days: {', '.join(target_dates)}")
 
     all_slots = scraper.get_all_slots()
@@ -172,7 +140,3 @@ def main():
     persist.save_report(results)
 
     notify_if_needed(total_new_slots, new_slots_messages, len(target_dates))
-
-
-if __name__ == "__main__":
-    main()

@@ -1,10 +1,10 @@
 from unittest.mock import MagicMock, patch
 
-from eversports_scraper import main as main_module
+from eversports_scraper import run
 from eversports_scraper.models import DayAvailability, Slot
 
 
-@patch("eversports_scraper.main.requests.get")
+@patch("eversports_scraper.run.requests.get")
 def test_fetch_target_dates_success(mock_get):
     mock_response = MagicMock()
     mock_response.status_code = 200
@@ -12,24 +12,24 @@ def test_fetch_target_dates_success(mock_get):
     mock_response.raise_for_status.return_value = None
     mock_get.return_value = mock_response
 
-    dates = main_module.fetch_target_dates("http://fake.url")
+    dates = run.fetch_target_dates("http://fake.url")
     assert dates == ["2025-11-21", "2025-11-23"]
 
 
-@patch("eversports_scraper.main.requests.get")
+@patch("eversports_scraper.run.requests.get")
 def test_fetch_target_dates_failure(mock_get):
     mock_get.side_effect = Exception("Network error")
-    dates = main_module.fetch_target_dates("http://fake.url")
+    dates = run.fetch_target_dates("http://fake.url")
     assert dates == []
 
 
-@patch("eversports_scraper.main.fetch_target_dates")
-@patch("eversports_scraper.main.scraper.get_all_slots")
-@patch("eversports_scraper.main.scraper.get_day_availability")
-@patch("eversports_scraper.main.telegram_notifier.send_telegram_message")
-@patch("eversports_scraper.main.persist.save_history")
-@patch("eversports_scraper.main.persist.save_report")
-@patch("eversports_scraper.main.persist.load_history")
+@patch("eversports_scraper.run.fetch_target_dates")
+@patch("eversports_scraper.run.scraper.get_all_slots")
+@patch("eversports_scraper.run.scraper.get_day_availability")
+@patch("eversports_scraper.run.telegram_notifier.send_telegram_message")
+@patch("eversports_scraper.run.persist.save_history")
+@patch("eversports_scraper.run.persist.save_report")
+@patch("eversports_scraper.run.persist.load_history")
 def test_main_flow(
     mock_load_history,
     mock_save_report,
@@ -53,11 +53,8 @@ def test_main_flow(
         free_slots_map={"10:00": [77394]},
     )
 
-    with patch("eversports_scraper.main.parse_arguments") as mock_args, \
-         patch("eversports_scraper.main.config.TARGET_DATES_CSV_URL", "http://mock.url"):
-        mock_args.return_value = MagicMock(verbose=False)
-
-        main_module.main()
+    with patch("eversports_scraper.run.config.TARGET_DATES_CSV_URL", "http://mock.url"):
+        run.run(start_date=None, days=3)
 
         mock_fetch_dates.assert_called_once()
         mock_get_slots.assert_called_once()
@@ -68,13 +65,13 @@ def test_main_flow(
         mock_send_telegram.assert_called_once()
 
 
-@patch("eversports_scraper.main.fetch_target_dates")
-@patch("eversports_scraper.main.scraper.get_all_slots")
-@patch("eversports_scraper.main.scraper.get_day_availability")
-@patch("eversports_scraper.main.telegram_notifier.send_telegram_message")
-@patch("eversports_scraper.main.persist.save_history")
-@patch("eversports_scraper.main.persist.save_report")
-@patch("eversports_scraper.main.persist.load_history")
+@patch("eversports_scraper.run.fetch_target_dates")
+@patch("eversports_scraper.run.scraper.get_all_slots")
+@patch("eversports_scraper.run.scraper.get_day_availability")
+@patch("eversports_scraper.run.telegram_notifier.send_telegram_message")
+@patch("eversports_scraper.run.persist.save_history")
+@patch("eversports_scraper.run.persist.save_report")
+@patch("eversports_scraper.run.persist.load_history")
 def test_main_flow_manual_override(
     mock_load_history,
     mock_save_report,
@@ -90,12 +87,8 @@ def test_main_flow_manual_override(
     mock_get_day.return_value = None  # No data found
     mock_fetch_dates.return_value = []  # Empty CSV to trigger fallback
 
-    with patch("eversports_scraper.main.parse_arguments") as mock_args, \
-         patch("eversports_scraper.main.config.TARGET_DATES_CSV_URL", "http://mock.url"):
-        # Simulate CLI args
-        mock_args.return_value = MagicMock(start_date="2025-01-01", days=1, verbose=False)
-
-        main_module.main()
+    with patch("eversports_scraper.run.config.TARGET_DATES_CSV_URL", "http://mock.url"):
+        run.run(start_date="2025-01-01", days=1)
 
         # Should fetch from CSV# No changes needed yet, let's verify first.)
         mock_fetch_dates.assert_called_once()
@@ -104,13 +97,13 @@ def test_main_flow_manual_override(
         mock_get_day.assert_called_with("2025-01-01", ["10:00"], {})
 
 
-@patch("eversports_scraper.main.fetch_target_dates")
-@patch("eversports_scraper.main.scraper.get_all_slots")
-@patch("eversports_scraper.main.scraper.get_day_availability")
-@patch("eversports_scraper.main.telegram_notifier.send_telegram_message")
-@patch("eversports_scraper.main.persist.save_history")
-@patch("eversports_scraper.main.persist.save_report")
-@patch("eversports_scraper.main.persist.load_history")
+@patch("eversports_scraper.run.fetch_target_dates")
+@patch("eversports_scraper.run.scraper.get_all_slots")
+@patch("eversports_scraper.run.scraper.get_day_availability")
+@patch("eversports_scraper.run.telegram_notifier.send_telegram_message")
+@patch("eversports_scraper.run.persist.save_history")
+@patch("eversports_scraper.run.persist.save_report")
+@patch("eversports_scraper.run.persist.load_history")
 def test_main_flow_csv_fallback(
     mock_load_history,
     mock_save_report,
@@ -126,12 +119,8 @@ def test_main_flow_csv_fallback(
     mock_get_day.return_value = None
     mock_fetch_dates.return_value = []  # Empty CSV
 
-    with patch("eversports_scraper.main.parse_arguments") as mock_args, \
-         patch("eversports_scraper.main.config.TARGET_DATES_CSV_URL", "http://mock.url"):
-        # No CLI args
-        mock_args.return_value = MagicMock(start_date=None, days=3, verbose=False)
-
-        main_module.main()
+    with patch("eversports_scraper.run.config.TARGET_DATES_CSV_URL", "http://mock.url"):
+        run.run(start_date=None, days=3)
 
         # Should fetch from CSV
         mock_fetch_dates.assert_called_once()
@@ -140,10 +129,10 @@ def test_main_flow_csv_fallback(
         assert mock_get_day.call_count == 3
 
 
-@patch("eversports_scraper.main.fetch_target_dates")
-@patch("eversports_scraper.main.scraper.get_all_slots")
-@patch("eversports_scraper.main.scraper.get_day_availability")
-@patch("eversports_scraper.main.telegram_notifier.send_telegram_message")
+@patch("eversports_scraper.run.fetch_target_dates")
+@patch("eversports_scraper.run.scraper.get_all_slots")
+@patch("eversports_scraper.run.scraper.get_day_availability")
+@patch("eversports_scraper.run.telegram_notifier.send_telegram_message")
 def test_main_no_new_slots(mock_send_telegram, mock_get_day, mock_get_slots, mock_fetch_dates):
     mock_fetch_dates.return_value = ["2025-01-01"]
     mock_get_slots.return_value = ["10:00"]
@@ -154,10 +143,7 @@ def test_main_no_new_slots(mock_send_telegram, mock_get_day, mock_get_slots, moc
         free_slots_map={"10:00": [77394]},
     )
 
-    with patch("eversports_scraper.main.parse_arguments") as mock_args:
-        mock_args.return_value = MagicMock(start_date=None, verbose=False)
+    run.run(start_date=None, days=3)
 
-        main_module.main()
-
-        mock_send_telegram.assert_not_called()
+    mock_send_telegram.assert_not_called()
 
