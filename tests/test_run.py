@@ -2,13 +2,10 @@ from unittest.mock import MagicMock, patch
 
 from eversports_scraper.models import DayAvailability, Slot, TargetInterval
 from eversports_scraper.run import (
-    fetch_target_dates,
-    check_time_overlap,
-    get_target_dates_list,
     _parse_target_date_row,
-    _filter_new_slots,
-    _process_date,
-    run
+    check_time_overlap,
+    fetch_target_dates,
+    run,
 )
 
 

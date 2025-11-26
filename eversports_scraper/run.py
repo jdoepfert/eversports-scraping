@@ -3,12 +3,12 @@ import io
 import logging
 import sys
 from datetime import datetime, timedelta
-from typing import List, Dict, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import requests
 
 from eversports_scraper import config, persist, scraper, telegram_notifier
-from eversports_scraper.models import TargetInterval, DayAvailability, Slot
+from eversports_scraper.models import DayAvailability, Slot, TargetInterval
 
 logger = logging.getLogger(__name__)
 
@@ -199,7 +199,7 @@ def _filter_new_slots(day_data: DayAvailability, target_interval: TargetInterval
     ]
 
 
-def _process_date(target_interval: TargetInterval, all_slots: Dict, history: Dict) -> Optional[DayAvailability]:
+def _process_date(target_interval: TargetInterval, all_slots: List[str], history: Dict) -> Optional[DayAvailability]:
     """Processes availability for a single date."""
     date_str = target_interval.date
     return scraper.get_day_availability(date_str, all_slots, history)
