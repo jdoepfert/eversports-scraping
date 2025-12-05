@@ -2,8 +2,9 @@ import csv
 import io
 import logging
 import sys
+from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
 
 import requests
 
@@ -11,6 +12,17 @@ from eversports_scraper import config, persist, scraper, telegram_notifier
 from eversports_scraper.models import DayAvailability, Slot, TargetInterval
 
 logger = logging.getLogger(__name__)
+
+FreeSlotsMap = Dict[str, List[int]]
+HistoryState = Dict[str, FreeSlotsMap]
+NewSlotsData = List[Tuple[str, List[Slot]]]
+
+
+@dataclass
+class ScrapeOutcome:
+    state_snapshot: HistoryState
+    day_availabilities: List[DayAvailability]
+    new_slots_data: NewSlotsData
 
 
 def _parse_target_date_row(row: List[str]) -> TargetInterval | None:
@@ -199,10 +211,42 @@ def _filter_new_slots(day_data: DayAvailability, target_interval: TargetInterval
     ]
 
 
-def _process_date(target_interval: TargetInterval, all_slots: List[str], history: Dict) -> Optional[DayAvailability]:
-    """Processes availability for a single date."""
-    date_str = target_interval.date
-    return scraper.get_day_availability(date_str, all_slots, history)
+def collect_availability(
+    target_intervals: List[TargetInterval],
+    all_slots: List[str],
+    history: HistoryState,
+) -> ScrapeOutcome:
+    """Processes target intervals and returns structured scrape outcome."""
+    state_snapshot: HistoryState = {}
+    day_availabilities: List[DayAvailability] = []
+    new_slots_data: NewSlotsData = []
+
+    for target_interval in target_intervals:
+        date_str = target_interval.date
+        day_availability = scraper.get_day_availability(date_str, all_slots, history)
+
+        if day_availability:
+            state_snapshot[date_str] = day_availability.free_slots_map
+            day_availabilities.append(day_availability)
+
+            filtered_new_slots = _filter_new_slots(day_availability, target_interval)
+            if filtered_new_slots:
+                new_slots_data.append((date_str, filtered_new_slots))
+        elif date_str in history:
+            # Preserve history if fetch failed
+            state_snapshot[date_str] = history[date_str]
+
+    return ScrapeOutcome(
+        state_snapshot=state_snapshot,
+        day_availabilities=day_availabilities,
+        new_slots_data=new_slots_data,
+    )
+
+
+def emit_reports(day_availabilities: List[DayAvailability]):
+    """Outputs availability reports to stdout."""
+    for day_data in day_availabilities:
+        print_availability_report(day_data)
 
 
 def run(start_date: str | None = None, days: int = 3):
@@ -214,36 +258,16 @@ def run(start_date: str | None = None, days: int = 3):
     print(f"Checking availability for {len(target_intervals)} days: {', '.join(date_strs)}")
 
     all_slots = scraper.get_all_slots()
-    history = persist.load_history()
+    history: HistoryState = persist.load_history()
 
-    # State tracking variables
-    current_state = {}  # Maps date -> list of free slot IDs (for persistence)
-    day_availabilities = []        # List of DayAvailability objects (for report generation)
-    new_slots_data = [] # List of tuples (date, slots) for notification
+    outcome = collect_availability(target_intervals, all_slots, history)
+    emit_reports(outcome.day_availabilities)
 
-    for target_interval in target_intervals:
-        date_str = target_interval.date
-        day_availability = scraper.get_day_availability(date_str, all_slots, history)
+    persist.save_history(outcome.state_snapshot)
+    persist.save_report(outcome.day_availabilities)
 
-        if day_availability:
-            print_availability_report(day_availability)
-            current_state[date_str] = day_availability.free_slots_map
-            day_availabilities.append(day_availability)
-
-            filtered_new_slots = _filter_new_slots(day_availability, target_interval)
-            
-            if filtered_new_slots:
-                new_slots_data.append((date_str, filtered_new_slots))
-
-        elif date_str in history:
-            # Preserve history if fetch failed
-            current_state[date_str] = history[date_str]
-
-    persist.save_history(current_state)
-    persist.save_report(day_availabilities)
-    
-    total_filtered_new_slots = sum(len(slots) for _, slots in new_slots_data)
+    total_filtered_new_slots = sum(len(slots) for _, slots in outcome.new_slots_data)
     if total_filtered_new_slots > 0:
-        send_notification(total_filtered_new_slots, new_slots_data)
+        send_notification(total_filtered_new_slots, outcome.new_slots_data)
     else:
         print(f"\nNo new slots found across {len(target_intervals)} days.")

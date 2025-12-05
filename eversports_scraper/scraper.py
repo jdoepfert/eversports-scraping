@@ -5,35 +5,8 @@ from urllib.parse import urlencode
 
 import cloudscraper
 
+from eversports_scraper import config
 from eversports_scraper.models import DayAvailability, Slot
-
-# --- Configuration ---
-FACILITY_ID = 76443
-COURT_IDS = [77394, 77395, 77396]
-
-COURT_MAPPING = {77394: "Court 1", 77395: "Court 2", 77396: "Court 3"}
-
-SPORT = "badminton"
-WIDGET_URL = "https://www.eversports.de/widget/w/c7o9ft"
-API_BASE = "https://www.eversports.de/widget/api/slot"
-
-# Headers to mimic a browser
-COMMON_HEADERS = {
-    "User-Agent": (
-        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
-        "AppleWebKit/537.36 (KHTML, like Gecko) "
-        "Chrome/129.0.0.0 Safari/537.36"
-    ),
-    "Accept": "application/json, text/plain, */*",
-    "Accept-Language": "de-DE,de;q=0.9,en;q=0.8",
-    "Referer": WIDGET_URL,
-    "Origin": "https://www.eversports.de",
-    "Sec-Fetch-Site": "same-origin",
-    "Sec-Fetch-Mode": "cors",
-    "Sec-Fetch-Dest": "empty",
-    "Connection": "keep-alive",
-    "X-Requested-With": "XMLHttpRequest",
-}
 
 logger = logging.getLogger(__name__)
 
@@ -60,9 +33,9 @@ def get_all_slots() -> List[str]:
 
 def build_url(day_iso: str) -> str:
     """Constructs the API URL for a specific date."""
-    qs = {"facilityId": FACILITY_ID, "sport": SPORT, "startDate": day_iso}
-    repeated = "&".join(f"courts%5B%5D={cid}" for cid in COURT_IDS)
-    url = f"{API_BASE}?{urlencode(qs)}&{repeated}"
+    qs = {"facilityId": config.FACILITY_ID, "sport": config.SPORT, "startDate": day_iso}
+    repeated = "&".join(f"courts%5B%5D={cid}" for cid in config.COURT_IDS)
+    url = f"{config.API_BASE}?{urlencode(qs)}&{repeated}"
     logger.debug(f"Built URL: {url}")
     return url
 
@@ -74,7 +47,7 @@ def fetch_booked_slots(date_str: str) -> Optional[Dict]:
 
     try:
         scraper = cloudscraper.create_scraper()
-        response = scraper.get(full_url, headers=COMMON_HEADERS, timeout=10)
+        response = scraper.get(full_url, headers=config.COMMON_HEADERS, timeout=10)
         logger.debug(f"Response status: {response.status_code}")
         response.raise_for_status()
         data: Dict = response.json()
@@ -112,7 +85,7 @@ def parse_booked_slots(data: Dict, date_str: str, all_slots: List[str]) -> Dict[
 
 def calculate_free_slots(booked_courts_by_slot: Dict[str, Set[int]], all_slots: List[str]) -> Dict[str, List[int]]:
     """Calculates which courts are free for each slot."""
-    all_court_ids = set(COURT_IDS)
+    all_court_ids = set(config.COURT_IDS)
     free_slots_map = {}
 
     for slot in all_slots:
@@ -143,7 +116,7 @@ def get_day_availability(date_str: str, all_slots: List[str], history: Dict) -> 
 
     for slot in sorted(free_slots_map.keys()):
         free_court_ids = free_slots_map[slot]
-        free_court_names = [COURT_MAPPING.get(cid, f"Unknown({cid})") for cid in sorted(free_court_ids)]
+        free_court_names = [config.COURT_MAPPING.get(cid, f"Unknown({cid})") for cid in sorted(free_court_ids)]
 
         # Check for new availability
         prev_free_courts = set(prev_free_slots_map.get(slot, []))
