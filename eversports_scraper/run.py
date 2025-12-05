@@ -147,7 +147,7 @@ def check_time_overlap(slot_time: str, target_date: TargetInterval) -> bool:
     return slot_start < interval_end and slot_end > interval_start
 
 
-def get_target_dates_list(start_date_arg: str | None, days_arg: int) -> List[TargetInterval]:
+def get_target_intervals_list(start_date_arg: str | None, days_arg: int) -> List[TargetInterval]:
     """Determines the list of target dates to scrape."""
     logger.info("Fetching target dates from CSV...")
     target_dates = []
@@ -243,7 +243,7 @@ def collect_availability(
     )
 
 
-def emit_reports(day_availabilities: List[DayAvailability]):
+def print_availability_reports(day_availabilities: List[DayAvailability]):
     """Outputs availability reports to stdout."""
     for day_data in day_availabilities:
         print_availability_report(day_data)
@@ -253,15 +253,15 @@ def run(start_date: str | None = None, days: int = 3):
     """Core orchestration logic. Loops through target dates, checks for availability, and 
     sends notifications when new slots are found."""
     
-    target_intervals = get_target_dates_list(start_date, days)
+    target_intervals = get_target_intervals_list(start_date, days)
     date_strs = [td.date for td in target_intervals]
-    print(f"Checking availability for {len(target_intervals)} days: {', '.join(date_strs)}")
+    logger.info(f"Checking availability for {len(target_intervals)} days: {', '.join(date_strs)}")
 
     all_slots = scraper.get_all_slots()
     history: HistoryState = persist.load_history()
 
     outcome = collect_availability(target_intervals, all_slots, history)
-    emit_reports(outcome.day_availabilities)
+    print_availability_reports(outcome.day_availabilities)
 
     persist.save_history(outcome.state_snapshot)
     persist.save_report(outcome.day_availabilities)
