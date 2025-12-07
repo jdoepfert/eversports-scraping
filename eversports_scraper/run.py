@@ -120,7 +120,7 @@ def print_availability_report(day_data):
         print(f"Summary: No courts available for {date_str}.")
 
 
-def check_time_overlap(slot_time: str, target_date: TargetInterval) -> bool:
+def has_time_overlap(slot_time: str, target_date: TargetInterval) -> bool:
     """Checks if a slot overlaps with the target date's time interval.
     
     Args:
@@ -207,7 +207,7 @@ def _filter_new_slots(day_data: DayAvailability, target_interval: TargetInterval
     # Filter slots based on time interval
     return [
         s for s in new_slots 
-        if check_time_overlap(s.time, target_interval)
+        if has_time_overlap(s.time, target_interval)
     ]
 
 
