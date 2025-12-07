@@ -108,40 +108,40 @@ def test_fetch_target_dates_partial_times(mock_get):
 def test_has_time_overlap_within_range():
     """Test slot fully within interval."""
     target = TargetInterval(date="2025-01-01", start_time="10:00", end_time="14:00")
-    assert has_time_overlap("11:00", target) is True
-    assert has_time_overlap("10:15", target) is True
-    assert has_time_overlap("13:00", target) is True
+    assert has_time_overlap("11:00", target)
+    assert has_time_overlap("10:15", target)
+    assert has_time_overlap("13:00", target)
 
 
 def test_has_time_overlap_partial():
     """Test slot partially overlaps interval."""
     target = TargetInterval(date="2025-01-01", start_time="10:00", end_time="11:00")
     # Slot 10:15-11:00 overlaps with 10:00-11:00
-    assert has_time_overlap("10:15", target) is True
+    assert has_time_overlap("10:15", target)
     # Slot 10:30-11:15 overlaps with 10:00-11:00 (ends after interval)
-    assert has_time_overlap("10:30", target) is True
+    assert has_time_overlap("10:30", target)
 
 
 def test_has_time_overlap_outside():
     """Test slot outside interval."""
     target = TargetInterval(date="2025-01-01", start_time="10:00", end_time="11:00")
     # Slot 11:00-11:45 starts exactly when interval ends
-    assert has_time_overlap("11:00", target) is False
+    assert not has_time_overlap("11:00", target)
     # Slot 09:00-09:45 ends before interval starts
-    assert has_time_overlap("09:00", target) is False
+    assert not has_time_overlap("09:00", target)
     # Slot 14:00-14:45 is way outside
-    assert has_time_overlap("14:00", target) is False
+    assert not has_time_overlap("14:00", target)
 
 
 def test_has_time_overlap_no_interval():
     """Test behavior when no interval is specified."""
     target = TargetInterval(date="2025-01-01", start_time=None, end_time=None)
-    assert has_time_overlap("10:00", target) is True
-    assert has_time_overlap("18:00", target) is True
+    assert has_time_overlap("10:00", target)
+    assert has_time_overlap("18:00", target)
     
     # Partial interval (only start or only end) should also return True
     target_partial = TargetInterval(date="2025-01-01", start_time="10:00", end_time=None)
-    assert has_time_overlap("11:00", target_partial) is True
+    assert has_time_overlap("11:00", target_partial)
 
 
 def test_has_time_overlap_edge_cases():
@@ -149,18 +149,18 @@ def test_has_time_overlap_edge_cases():
     target = TargetInterval(date="2025-01-01", start_time="17:00", end_time="21:00")
     
     # Overlapping cases
-    assert has_time_overlap("20:45", target) is True  # 15 min overlap at end
-    assert has_time_overlap("20:30", target) is True  # 30 min overlap
-    assert has_time_overlap("20:15", target) is True  # Ends exactly at interval end
-    assert has_time_overlap("16:30", target) is True  # 15 min overlap at start
-    assert has_time_overlap("17:00", target) is True  # Starts exactly at interval start
-    assert has_time_overlap("18:00", target) is True  # Fully within interval
+    assert has_time_overlap("20:45", target)  # 15 min overlap at end
+    assert has_time_overlap("20:30", target)  # 30 min overlap
+    assert has_time_overlap("20:15", target)  # Ends exactly at interval end
+    assert has_time_overlap("16:30", target)  # 15 min overlap at start
+    assert has_time_overlap("17:00", target)  # Starts exactly at interval start
+    assert has_time_overlap("18:00", target)  # Fully within interval
     
     # Non-overlapping cases (touching only)
-    assert has_time_overlap("21:00", target) is False  # Starts when interval ends
-    assert has_time_overlap("16:15", target) is False  # Ends when interval starts
-    assert has_time_overlap("21:15", target) is False  # After interval
-    assert has_time_overlap("15:00", target) is False  # Before interval
+    assert not has_time_overlap("21:00", target)  # Starts when interval ends
+    assert not has_time_overlap("16:15", target)  # Ends when interval starts
+    assert not has_time_overlap("21:15", target)  # After interval
+    assert not has_time_overlap("15:00", target)  # Before interval
 
 
 @patch("eversports_scraper.run.fetch_target_dates")
