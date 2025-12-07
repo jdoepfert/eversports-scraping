@@ -29,23 +29,23 @@ def _parse_target_date_row(row: List[str]) -> TargetInterval | None:
     """Parses a single CSV row into a TargetInterval object."""
     if not row:
         return None
-        
+
     date_str = row[0].strip()
-    
+
     # Skip likely header rows (case-insensitive check for common header text)
-    if date_str.lower() in ['date', 'datum', 'day', 'tag']:
+    if date_str.lower() in ["date", "datum", "day", "tag"]:
         logger.debug(f"Skipping header row: {row}")
         return None
-    
+
     try:
         # Parse DD.MM.YYYY and convert to YYYY-MM-DD
         dt = datetime.strptime(date_str, "%d.%m.%Y")
         iso_date = dt.strftime("%Y-%m-%d")
-        
+
         # Parse optional time columns
         start_time = None
         end_time = None
-        
+
         if len(row) > 1 and row[1].strip():
             start_time = row[1].strip()
             # Validate time format
@@ -54,7 +54,7 @@ def _parse_target_date_row(row: List[str]) -> TargetInterval | None:
             except ValueError:
                 logger.warning(f"Invalid start time format '{start_time}' for {date_str}, ignoring")
                 start_time = None
-        
+
         if len(row) > 2 and row[2].strip():
             end_time = row[2].strip()
             # Validate time format
@@ -63,12 +63,8 @@ def _parse_target_date_row(row: List[str]) -> TargetInterval | None:
             except ValueError:
                 logger.warning(f"Invalid end time format '{end_time}' for {date_str}, ignoring")
                 end_time = None
-        
-        return TargetInterval(
-            date=iso_date,
-            start_time=start_time,
-            end_time=end_time
-        )
+
+        return TargetInterval(date=iso_date, start_time=start_time, end_time=end_time)
     except ValueError:
         # Silently skip rows that don't parse as dates (likely headers or invalid entries)
         logger.debug(f"Skipping row with invalid date format: {date_str}")
@@ -77,7 +73,7 @@ def _parse_target_date_row(row: List[str]) -> TargetInterval | None:
 
 def fetch_target_dates(url: str) -> List[TargetInterval]:
     """Fetches target dates with optional time intervals from a Google Sheet CSV.
-    
+
     Expected CSV format:
     Column A: Date in DD.MM.YYYY format
     Column B: Start time in HH:MM format (optional)
@@ -122,26 +118,26 @@ def print_availability_report(day_data):
 
 def has_time_overlap(slot_time: str, target_date: TargetInterval) -> bool:
     """Checks if a slot overlaps with the target date's time interval.
-    
+
     Args:
         slot_time: Start time of the slot in HH:MM format (e.g., "10:15")
         target_date: TargetInterval with optional start_time and end_time
-    
+
     Returns:
         True if the slot overlaps with the interval or no interval is specified
     """
     # If no time interval specified, include all slots
     if target_date.start_time is None or target_date.end_time is None:
         return True
-    
+
     # Parse times to compare
     # Slot is 45 minutes long
     slot_start = datetime.strptime(slot_time, "%H:%M").time()
     slot_end = (datetime.strptime(slot_time, "%H:%M") + timedelta(minutes=45)).time()
-    
+
     interval_start = datetime.strptime(target_date.start_time, "%H:%M").time()
     interval_end = datetime.strptime(target_date.end_time, "%H:%M").time()
-    
+
     # Check if there's any overlap
     # Slots overlap if: slot_start < interval_end AND slot_end > interval_start
     return slot_start < interval_end and slot_end > interval_start
@@ -167,11 +163,7 @@ def get_target_intervals_list(start_date_arg: str | None, days_arg: int) -> List
 
         for i in range(days_arg):
             current_date = start_date + timedelta(days=i)
-            target_dates.append(TargetInterval(
-                date=current_date.strftime("%Y-%m-%d"),
-                start_time=None,
-                end_time=None
-            ))
+            target_dates.append(TargetInterval(date=current_date.strftime("%Y-%m-%d"), start_time=None, end_time=None))
 
     if not target_dates:
         logger.error("No target dates found. Exiting.")
@@ -190,7 +182,7 @@ def send_notification(total_new_slots: int, new_slots_data: List[Tuple[str, List
         msg_lines.append(f"*{date_str}*:")
         for s in slots:
             msg_lines.append(f"  - {s.time} ({', '.join(s.courts)})")
-    
+
     formatted_slots_msg = "\n".join(msg_lines)
 
     # Send Telegram notification
@@ -203,12 +195,9 @@ def _filter_new_slots(day_data: DayAvailability, target_interval: TargetInterval
     """Filters new slots based on the target interval."""
     # Collect new slots for notification, filtered by time interval
     new_slots = [s for s in day_data.slots if s.is_new]
-    
+
     # Filter slots based on time interval
-    return [
-        s for s in new_slots 
-        if has_time_overlap(s.time, target_interval)
-    ]
+    return [s for s in new_slots if has_time_overlap(s.time, target_interval)]
 
 
 def collect_availability(
@@ -250,9 +239,9 @@ def print_availability_reports(day_availabilities: List[DayAvailability]):
 
 
 def run(start_date: str | None = None, days: int = 3):
-    """Core orchestration logic. Loops through target dates, checks for availability, and 
+    """Core orchestration logic. Loops through target dates, checks for availability, and
     sends notifications when new slots are found."""
-    
+
     target_intervals = get_target_intervals_list(start_date, days)
     date_strs = [td.date for td in target_intervals]
     logger.info(f"Checking availability for {len(target_intervals)} days: {', '.join(date_strs)}")

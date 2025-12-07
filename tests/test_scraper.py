@@ -128,7 +128,7 @@ def test_get_day_availability_no_history(mock_fetch):
     assert result is not None
     assert result.date == "2025-01-01"
     assert len(result.slots) == 1
-    
+
     # Both free courts should be marked as new
     slot = result.slots[0]
     assert slot.time == "10:15"
@@ -156,7 +156,7 @@ def test_get_day_availability_with_history(mock_fetch):
     assert result is not None
     assert result.date == "2025-01-01"
     assert len(result.slots) == 1
-    
+
     # Court 3 is newly free, so slot should be marked as new
     slot = result.slots[0]
     assert slot.time == "10:15"
@@ -184,7 +184,7 @@ def test_get_day_availability_no_new_slots(mock_fetch):
     assert result is not None
     assert result.date == "2025-01-01"
     assert len(result.slots) == 1
-    
+
     # No changes, so slot should NOT be marked as new
     slot = result.slots[0]
     assert slot.time == "10:15"

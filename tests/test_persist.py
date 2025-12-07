@@ -18,8 +18,6 @@ def test_ensure_data_dir():
         mock_makedirs.assert_called_with(config.DATA_DIR)
 
 
-
-
 @patch("eversports_scraper.persist.config.HISTORY_FILE", "/tmp/test_history.json")
 @patch("os.path.exists")
 def test_load_history(mock_exists):
@@ -29,10 +27,6 @@ def test_load_history(mock_exists):
     with patch("builtins.open", mock_open(read_data=test_data)):
         history = persist.load_history()
         assert history == {"2025-01-01": {}}
-
-
-
-
 
 
 def test_load_history_no_file():
@@ -53,7 +47,7 @@ def test_save_history(mock_ensure, mock_dump, mock_datetime):
     mock_astimezone.isoformat.return_value = "2025-01-01T12:00:00Z"
     mock_now.astimezone.return_value = mock_astimezone
     mock_datetime.now.return_value = mock_now
-    
+
     with patch("builtins.open", mock_open()):
         history = {"test": "data"}
         persist.save_history(history)

@@ -3,8 +3,8 @@ from unittest.mock import MagicMock, patch
 from eversports_scraper.models import DayAvailability, Slot, TargetInterval
 from eversports_scraper.run import (
     _parse_target_date_row,
-    has_time_overlap,
     fetch_target_dates,
+    has_time_overlap,
     run,
 )
 
@@ -138,7 +138,7 @@ def test_has_time_overlap_no_interval():
     target = TargetInterval(date="2025-01-01", start_time=None, end_time=None)
     assert has_time_overlap("10:00", target)
     assert has_time_overlap("18:00", target)
-    
+
     # Partial interval (only start or only end) should also return True
     target_partial = TargetInterval(date="2025-01-01", start_time="10:00", end_time=None)
     assert has_time_overlap("11:00", target_partial)
@@ -147,7 +147,7 @@ def test_has_time_overlap_no_interval():
 def test_has_time_overlap_edge_cases():
     """Test comprehensive edge cases including boundary touching slots."""
     target = TargetInterval(date="2025-01-01", start_time="17:00", end_time="21:00")
-    
+
     # Overlapping cases
     assert has_time_overlap("20:45", target)  # 15 min overlap at end
     assert has_time_overlap("20:30", target)  # 30 min overlap
@@ -155,7 +155,7 @@ def test_has_time_overlap_edge_cases():
     assert has_time_overlap("16:30", target)  # 15 min overlap at start
     assert has_time_overlap("17:00", target)  # Starts exactly at interval start
     assert has_time_overlap("18:00", target)  # Fully within interval
-    
+
     # Non-overlapping cases (touching only)
     assert not has_time_overlap("21:00", target)  # Starts when interval ends
     assert not has_time_overlap("16:15", target)  # Ends when interval starts
@@ -306,9 +306,7 @@ def test_notification_filtered_by_time(
 ):
     """Test that notifications only include slots within the time interval."""
     # Set up a target date with time interval 10:00-12:00
-    mock_fetch_dates.return_value = [
-        TargetInterval(date="2025-01-01", start_time="10:00", end_time="12:00")
-    ]
+    mock_fetch_dates.return_value = [TargetInterval(date="2025-01-01", start_time="10:00", end_time="12:00")]
     mock_get_slots.return_value = ["10:15", "11:00", "14:00"]
     mock_load_history.return_value = {}
 
@@ -329,10 +327,9 @@ def test_notification_filtered_by_time(
 
         # Should send telegram
         mock_send_telegram.assert_called_once()
-        
+
         # Check the message content - should only include 10:15 and 11:00, not 14:00
         message = mock_send_telegram.call_args[0][0]
         assert "10:15" in message
         assert "11:00" in message
         assert "14:00" not in message
-

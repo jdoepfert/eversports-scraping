@@ -37,10 +37,7 @@ def save_history(history: Dict):
     ensure_data_dir()
     try:
         # Wrap history with metadata using local time
-        data = {
-            "last_updated": datetime.now().astimezone().isoformat(),
-            "availability": history
-        }
+        data = {"last_updated": datetime.now().astimezone().isoformat(), "availability": history}
         with open(config.HISTORY_FILE, "w") as f:
             json.dump(data, f, indent=2)
         logger.info(f"Saved history to {config.HISTORY_FILE} on {data['last_updated']}")

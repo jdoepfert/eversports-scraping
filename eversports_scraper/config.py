@@ -19,7 +19,7 @@ COURT_IDS: List[int] = [77394, 77395, 77396]
 COURT_MAPPING: Dict[int, str] = {77394: "Court 1", 77395: "Court 2", 77396: "Court 3"}
 
 SPORT = os.environ.get("SPORT", "badminton")
-WIDGET_URL =  "https://www.eversports.de/widget/w/c7o9ft"   
+WIDGET_URL = "https://www.eversports.de/widget/w/c7o9ft"
 API_BASE = "https://www.eversports.de/widget/api/slot"
 
 # Headers to mimic a browser
