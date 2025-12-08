@@ -1,3 +1,4 @@
+import json
 from datetime import datetime
 from unittest.mock import MagicMock, patch
 
@@ -83,6 +84,26 @@ def test_parse_booked_slots():
     assert 123 in result["10:15"]
     assert 456 in result["11:00"]
     assert len(result["10:15"]) == 1
+
+
+@pytest.fixture
+def slots_data_from_api():
+    json_data = """
+    {"slots":[{"date":"2025-11-05","start":"1100","court":77395,"title":null,"present":true,"isUserBookingOwner":false,"booking":null},{"date":"2025-11-05","start":"1230","court":77395,"title":null,"present":true,"isUserBookingOwner":false,"booking":null},{"date":"2025-11-05","start":"1445","court":77396,"title":null,"present":true,"isUserBookingOwner":false,"booking":null},{"date":"2025-11-05","start":"1615","court":77394,"title":null,"present":true,"isUserBookingOwner":false,"booking":null},{"date":"2025-11-05","start":"1615","court":77395,"title":null,"present":true,"isUserBookingOwner":false,"booking":null},{"date":"2025-11-05","start":"1615","court":77396,"title":null,"present":true,"isUserBookingOwner":false,"booking":null},{"date":"2025-11-05","start":"1700","court":77394,"title":null,"present":true,"isUserBookingOwner":false,"booking":null},{"date":"2025-11-05","start":"1700","court":77395,"title":null,"present":true,"isUserBookingOwner":false,"booking":null},{"date":"2025-11-05","start":"1700","court":77396,"title":null,"present":true,"isUserBookingOwner":false,"booking":null},{"date":"2025-11-05","start":"1745","court":77394,"title":null,"present":true,"isUserBookingOwner":false,"booking":null},{"date":"2025-11-05","start":"1745","court":77395,"title":null,"present":true,"isUserBookingOwner":false,"booking":null},{"date":"2025-11-05","start":"1745","court":77396,"title":null,"present":true,"isUserBookingOwner":false,"booking":null},{"date":"2025-11-05","start":"1830","court":77394,"title":null,"present":true,"isUserBookingOwner":false,"booking":null},{"date":"2025-11-05","start":"1830","court":77395,"title":null,"present":true,"isUserBookingOwner":false,"booking":null},{"date":"2025-11-05","start":"1830","court":77396,"title":null,"present":true,"isUserBookingOwner":false,"booking":null},{"date":"2025-11-05","start":"1915","court":77394,"title":null,"present":true,"isUserBookingOwner":false,"booking":null},{"date":"2025-11-05","start":"1915","court":77395,"title":null,"present":true,"isUserBookingOwner":false,"booking":null},{"date":"2025-11-05","start":"1915","court":77396,"title":null,"present":true,"isUserBookingOwner":false,"booking":null},{"date":"2025-11-05","start":"2000","court":77394,"title":null,"present":true,"isUserBookingOwner":false,"booking":null},{"date":"2025-11-05","start":"2000","court":77395,"title":null,"present":true,"isUserBookingOwner":false,"booking":null},{"date":"2025-11-05","start":"2000","court":77396,"title":null,"present":true,"isUserBookingOwner":false,"booking":null},{"date":"2025-11-05","start":"2045","court":77395,"title":null,"present":true,"isUserBookingOwner":false,"booking":null},{"date":"2025-11-05","start":"2045","court":77396,"title":null,"present":true,"isUserBookingOwner":false,"booking":null},{"date":"2025-11-05","start":"2130","court":77395,"title":null,"present":true,"isUserBookingOwner":false,"booking":null},{"date":"2025-11-05","start":"2130","court":77396,"title":null,"present":true,"isUserBookingOwner":false,"booking":null}]}
+    """
+    return json.loads(json_data)
+
+
+def test_parse_booked_slots_complex(slots_data_from_api):
+    date_str = "2025-11-05"
+    all_slots = scraper.get_all_slots()
+
+    result = scraper.parse_booked_slots(slots_data_from_api, date_str, all_slots)
+
+    # 17:00 is fully booked (3 courts)
+    assert len(result["17:00"]) == 3
+    # 11:00 has 1 booking
+    assert len(result["11:00"]) == 1
 
 
 def test_calculate_free_slots():

@@ -2,9 +2,8 @@ import csv
 import io
 import logging
 import sys
-
 from datetime import datetime, timedelta
-from typing import Dict, List, Tuple
+from typing import List, Tuple
 
 import requests
 
@@ -19,9 +18,6 @@ from eversports_scraper.models import (
 )
 
 logger = logging.getLogger(__name__)
-
-
-
 
 
 def _parse_target_date_row(row: List[str]) -> TargetInterval | None:
