@@ -5,6 +5,7 @@ from datetime import datetime
 from typing import Dict, List
 
 from eversports_scraper import config
+from eversports_scraper.models import HistoryState
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +16,7 @@ def ensure_data_dir():
         os.makedirs(config.DATA_DIR)
 
 
-def load_history() -> Dict:
+def load_history() -> HistoryState:
     """Loads the previous availability state from a JSON file with timestamp metadata."""
     if not os.path.exists(config.HISTORY_FILE):
         logger.info("No history file found. Starting fresh.")
@@ -32,7 +33,7 @@ def load_history() -> Dict:
         return {}
 
 
-def save_history(history: Dict):
+def save_history(history: HistoryState):
     """Saves the current availability state to a JSON file with timestamp (local time)."""
     ensure_data_dir()
     try:

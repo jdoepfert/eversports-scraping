@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 from pydantic import BaseModel
 
@@ -21,3 +21,14 @@ class TargetInterval(BaseModel):
     date: str  # ISO format YYYY-MM-DD
     start_time: str | None = None  # HH:MM format, local time
     end_time: str | None = None  # HH:MM format, local time
+
+
+FreeSlotsMap = Dict[str, List[int]]
+HistoryState = Dict[str, FreeSlotsMap]
+NewSlotsData = List[Tuple[str, List[Slot]]]
+
+
+class ScrapeOutcome(BaseModel):
+    state_snapshot: HistoryState
+    day_availabilities: List[DayAvailability]
+    new_slots_data: NewSlotsData

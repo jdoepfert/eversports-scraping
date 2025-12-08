@@ -2,27 +2,26 @@ import csv
 import io
 import logging
 import sys
-from dataclasses import dataclass
+
 from datetime import datetime, timedelta
 from typing import Dict, List, Tuple
 
 import requests
 
 from eversports_scraper import config, persist, scraper, telegram_notifier
-from eversports_scraper.models import DayAvailability, Slot, TargetInterval
+from eversports_scraper.models import (
+    DayAvailability,
+    HistoryState,
+    NewSlotsData,
+    ScrapeOutcome,
+    Slot,
+    TargetInterval,
+)
 
 logger = logging.getLogger(__name__)
 
-FreeSlotsMap = Dict[str, List[int]]
-HistoryState = Dict[str, FreeSlotsMap]
-NewSlotsData = List[Tuple[str, List[Slot]]]
 
 
-@dataclass
-class ScrapeOutcome:
-    state_snapshot: HistoryState
-    day_availabilities: List[DayAvailability]
-    new_slots_data: NewSlotsData
 
 
 def _parse_target_date_row(row: List[str]) -> TargetInterval | None:
