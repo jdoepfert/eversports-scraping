@@ -4,6 +4,7 @@ from eversports_scraper.models import DayAvailability, Slot, TargetInterval
 from eversports_scraper.run import (
     _parse_target_date_row,
     fetch_target_dates,
+    filter_future_dates,
     has_time_overlap,
     run,
 )
@@ -105,6 +106,63 @@ def test_fetch_target_dates_partial_times(mock_get):
     assert dates[1].end_time == "14:00"
 
 
+def test_filter_future_dates_keeps_today():
+    """Test that today's date is kept."""
+    from datetime import datetime
+
+    today = datetime.now().strftime("%Y-%m-%d")
+    intervals = [TargetInterval(date=today, start_time=None, end_time=None)]
+
+    result = filter_future_dates(intervals)
+
+    assert len(result) == 1
+    assert result[0].date == today
+
+
+def test_filter_future_dates_keeps_future():
+    """Test that future dates are kept."""
+    intervals = [
+        TargetInterval(date="2125-01-01", start_time=None, end_time=None),
+        TargetInterval(date="2125-12-31", start_time="10:00", end_time="12:00"),
+    ]
+
+    result = filter_future_dates(intervals)
+
+    assert len(result) == 2
+    assert result[0].date == "2125-01-01"
+    assert result[1].date == "2125-12-31"
+
+
+def test_filter_future_dates_removes_past():
+    """Test that past dates are filtered out."""
+    intervals = [
+        TargetInterval(date="2020-01-01", start_time=None, end_time=None),
+        TargetInterval(date="2021-05-15", start_time="10:00", end_time="12:00"),
+    ]
+
+    result = filter_future_dates(intervals)
+
+    assert len(result) == 0
+
+
+def test_filter_future_dates_mixed():
+    """Test mix of past, today, and future dates."""
+    from datetime import datetime
+
+    today = datetime.now().strftime("%Y-%m-%d")
+    intervals = [
+        TargetInterval(date="2020-01-01", start_time=None, end_time=None),
+        TargetInterval(date=today, start_time="10:00", end_time="12:00"),
+        TargetInterval(date="2125-12-31", start_time=None, end_time=None),
+    ]
+
+    result = filter_future_dates(intervals)
+
+    assert len(result) == 2
+    assert result[0].date == today
+    assert result[1].date == "2125-12-31"
+
+
 def test_has_time_overlap_within_range():
     """Test slot fully within interval."""
     target = TargetInterval(date="2025-01-01", start_time="10:00", end_time="14:00")
@@ -180,14 +238,14 @@ def test_main_flow(
     mock_fetch_dates,
 ):
     # Setup mocks
-    mock_fetch_dates.return_value = [TargetInterval(date="2025-01-01", start_time=None, end_time=None)]
+    mock_fetch_dates.return_value = [TargetInterval(date="2125-01-01", start_time=None, end_time=None)]
     mock_get_slots.return_value = ["10:00"]
     mock_load_history.return_value = {}
 
     # Mock return for get_day_availability
     # Return a day with new slots to trigger telegram
     mock_get_day.return_value = DayAvailability(
-        date="2025-01-01",
+        date="2125-01-01",
         slots=[Slot(time="10:00", courts=["Court 1"], court_ids=[77394], is_new=True)],
         new_count=1,
         free_slots_map={"10:00": [77394]},
@@ -274,10 +332,10 @@ def test_main_flow_csv_fallback(
 @patch("eversports_scraper.run.scraper.get_day_availability")
 @patch("eversports_scraper.run.telegram_notifier.send_telegram_message")
 def test_main_no_new_slots(mock_send_telegram, mock_get_day, mock_get_slots, mock_fetch_dates):
-    mock_fetch_dates.return_value = [TargetInterval(date="2025-01-01", start_time=None, end_time=None)]
+    mock_fetch_dates.return_value = [TargetInterval(date="2125-01-01", start_time=None, end_time=None)]
     mock_get_slots.return_value = ["10:00"]
     mock_get_day.return_value = DayAvailability(
-        date="2025-01-01",
+        date="2125-01-01",
         slots=[Slot(time="10:00", courts=["Court 1"], court_ids=[77394], is_new=False)],
         new_count=0,
         free_slots_map={"10:00": [77394]},
@@ -306,13 +364,13 @@ def test_notification_filtered_by_time(
 ):
     """Test that notifications only include slots within the time interval."""
     # Set up a target date with time interval 10:00-12:00
-    mock_fetch_dates.return_value = [TargetInterval(date="2025-01-01", start_time="10:00", end_time="12:00")]
+    mock_fetch_dates.return_value = [TargetInterval(date="2125-01-01", start_time="10:00", end_time="12:00")]
     mock_get_slots.return_value = ["10:15", "11:00", "14:00"]
     mock_load_history.return_value = {}
 
     # Return availability with new slots at 10:15, 11:00, and 14:00
     mock_get_day.return_value = DayAvailability(
-        date="2025-01-01",
+        date="2125-01-01",
         slots=[
             Slot(time="10:15", courts=["Court 1"], court_ids=[77394], is_new=True),
             Slot(time="11:00", courts=["Court 2"], court_ids=[77395], is_new=True),
@@ -333,3 +391,21 @@ def test_notification_filtered_by_time(
         assert "10:15" in message
         assert "11:00" in message
         assert "14:00" not in message
+
+
+@patch("eversports_scraper.run.fetch_target_dates")
+def test_run_exits_gracefully_when_no_future_dates(mock_fetch_dates):
+    """Test that the scraper exits gracefully with code 0 when only past dates exist."""
+    # Mock fetch_target_dates to return only past dates
+    mock_fetch_dates.return_value = [
+        TargetInterval(date="2020-01-01", start_time=None, end_time=None),
+        TargetInterval(date="2021-05-15", start_time="10:00", end_time="12:00"),
+    ]
+
+    with patch("eversports_scraper.run.config.TARGET_DATES_CSV_URL", "http://mock.url"):
+        with patch("sys.exit") as mock_exit:
+            run(start_date=None, days=3)
+
+            # Should exit with code 0 (success)
+            mock_exit.assert_called_once_with(0)
+

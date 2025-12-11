@@ -94,6 +94,28 @@ def fetch_target_dates(url: str) -> List[TargetInterval]:
         return []
 
 
+def filter_future_dates(target_intervals: List[TargetInterval]) -> List[TargetInterval]:
+    """Filters target intervals to only include dates in the future or today.
+
+    Args:
+        target_intervals: List of target intervals to filter
+
+    Returns:
+        List of target intervals with dates >= today
+    """
+    today = datetime.now().date()
+    future_intervals = []
+
+    for interval in target_intervals:
+        target_date = datetime.strptime(interval.date, "%Y-%m-%d").date()
+        if target_date >= today:
+            future_intervals.append(interval)
+        else:
+            logger.debug(f"Skipping past date: {interval.date}")
+
+    return future_intervals
+
+
 def print_availability_report(day_data):
     """Prints the formatted availability report to stdout."""
     date_str = day_data.date
@@ -144,6 +166,12 @@ def get_target_intervals_list(start_date_arg: str | None, days_arg: int) -> List
     target_dates = []
     if config.TARGET_DATES_CSV_URL:
         target_dates = fetch_target_dates(config.TARGET_DATES_CSV_URL)
+        # Filter to only future dates
+        if target_dates:
+            target_dates = filter_future_dates(target_dates)
+            if not target_dates:
+                logger.info("No future dates found in Google Sheet. Exiting gracefully.")
+                sys.exit(0)
 
     if not target_dates:
         logger.warning("No target dates found in google sheet")
